@@ -17,7 +17,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);
             position: relative;
             overflow: hidden;
         }
@@ -187,7 +187,7 @@
         .btn-login {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);
             border: none;
             border-radius: 10px;
             color: #fff;

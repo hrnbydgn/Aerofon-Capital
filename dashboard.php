@@ -28,7 +28,7 @@ $login_time = $_SESSION['login_time'] ?? time();
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -81,7 +81,7 @@ $login_time = $_SESSION['login_time'] ?? time();
         .user-avatar {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
