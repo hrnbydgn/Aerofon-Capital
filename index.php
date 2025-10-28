@@ -1,3 +1,20 @@
+<?php
+session_start();
+
+// Hata ve başarı mesajlarını değişkenlere al
+$error_message = '';
+$success_message = '';
+
+if (isset($_SESSION['error'])) {
+    $error_message = $_SESSION['error'];
+    unset($_SESSION['error']);
+}
+
+if (isset($_SESSION['success'])) {
+    $success_message = $_SESSION['success'];
+    unset($_SESSION['success']);
+}
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -340,18 +357,14 @@
         </div>
 
         <?php
-        session_start();
-        
         // Hata mesajını göster
-        if (isset($_SESSION['error'])) {
-            echo '<div class="error-message">⚠️ ' . htmlspecialchars($_SESSION['error']) . '</div>';
-            unset($_SESSION['error']);
+        if (!empty($error_message)) {
+            echo '<div class="error-message">⚠️ ' . htmlspecialchars($error_message) . '</div>';
         }
         
         // Başarı mesajını göster
-        if (isset($_SESSION['success'])) {
-            echo '<div class="success-message">✓ ' . htmlspecialchars($_SESSION['success']) . '</div>';
-            unset($_SESSION['success']);
+        if (!empty($success_message)) {
+            echo '<div class="success-message">✓ ' . htmlspecialchars($success_message) . '</div>';
         }
         ?>
 
