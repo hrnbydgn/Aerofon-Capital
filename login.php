@@ -61,12 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Kullanıcı doğrulama (demo)
     $user_found = false;
     $user_data = null;
+    $user_key = null;
     
     foreach ($demo_users as $key => $user) {
         if ($key === $username || $user['email'] === $username) {
             if (password_verify($password, $user['password'])) {
                 $user_found = true;
                 $user_data = $user;
+                $user_key = $key;
                 break;
             }
         }
@@ -75,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($user_found) {
         // Başarılı giriş
         $_SESSION['logged_in'] = true;
-        $_SESSION['user_id'] = $key;
+        $_SESSION['user_id'] = $user_key;
         $_SESSION['username'] = $username;
         $_SESSION['user_name'] = $user_data['name'];
         $_SESSION['user_email'] = $user_data['email'];
