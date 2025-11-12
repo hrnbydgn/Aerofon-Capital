@@ -1,212 +1,377 @@
-/* Custom Dark Theme for DJI Agras Drone UI */
+/* DJI Agras Spray Drone Interface - Custom Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     overflow: hidden;
     height: 100vh;
+    background-color: #f5f5f5;
 }
 
-/* Top Status Bar */
+/* Top Status Bar - Green Theme */
 .top-status-bar {
-    height: 50px;
-    position: sticky;
-    top: 0;
+    background: linear-gradient(135deg, #7BB924 0%, #6BA520 100%);
+    height: 60px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1030;
+}
+
+.top-status-bar h5 {
+    font-size: 1.3rem;
 }
 
 /* Main Container Layout */
 .main-container {
-    height: calc(100vh - 50px - 60px); /* minus header and footer */
+    height: calc(100vh - 60px);
     overflow: hidden;
 }
 
-/* Left Toolbar */
-.left-toolbar {
-    width: 70px;
-    padding: 10px;
-    z-index: 1020;
+/* Left Panel - White */
+.left-panel {
+    width: 340px;
+    padding: 20px;
+    overflow-y: auto;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
-.left-toolbar .btn {
-    width: 50px;
-    height: 50px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Nav Pills Custom Style */
+.nav-pills .nav-link {
+    background-color: #f0f0f0;
+    color: #333;
+    font-weight: 600;
+    border: none;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #7BB924;
+    color: white;
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: #e0e0e0;
 }
 
 /* Map Container */
 .map-container {
     position: relative;
     overflow: hidden;
+    background-color: #d4d4d4;
 }
 
 .map-view {
     width: 100%;
     height: 100%;
-    min-height: 400px;
+    background: linear-gradient(to bottom, #b8b8b8, #d4d4d4);
+    position: relative;
 }
 
-/* FPV Preview */
-.fpv-preview {
-    width: 320px;
-    height: 180px;
+/* Info Overlay - Top Right */
+.info-overlay {
+    z-index: 1020;
+    min-width: 200px;
+}
+
+.info-card {
+    backdrop-filter: blur(10px);
+}
+
+.info-card small {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.info-card .fw-bold {
+    font-size: 1rem;
+}
+
+/* Map Popups */
+.map-popup {
+    z-index: 1010;
+    min-width: 150px;
+    font-size: 0.9rem;
+}
+
+/* Map Action Buttons */
+.map-actions {
+    z-index: 1010;
+    min-width: 120px;
+}
+
+.map-actions .btn {
+    font-weight: 600;
+}
+
+/* Drone Indicator - Compass */
+.drone-indicator {
     z-index: 1010;
 }
 
-.fpv-content {
-    height: 145px;
+.compass-circle {
+    width: 120px;
+    height: 120px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Right Sidebar */
-.right-sidebar {
-    width: 320px;
-    max-height: 100%;
-    overflow-y: auto;
+/* Bottom Status Bar */
+.bottom-status-bar {
+    z-index: 1010;
+    backdrop-filter: blur(10px);
 }
 
-.right-sidebar .nav-tabs {
-    border-bottom: 1px solid #495057;
+.bottom-status-bar .fw-bold {
+    font-size: 1.1rem;
 }
 
-.right-sidebar .nav-link {
-    color: #adb5bd;
-    border: none;
-    border-bottom: 2px solid transparent;
+/* Altitude Display */
+.altitude-display {
+    z-index: 1010;
 }
 
-.right-sidebar .nav-link.active {
-    color: #fff;
-    background-color: transparent;
-    border-bottom-color: #0d6efd;
+.altitude-display .bg-dark {
+    backdrop-filter: blur(10px);
 }
 
-.right-sidebar .nav-link:hover {
-    color: #fff;
-    border-bottom-color: #0d6efd;
+/* Zoom Control */
+.zoom-control {
+    z-index: 1010;
 }
 
-/* Bottom Task Bar */
-.bottom-task-bar {
-    height: 60px;
-    position: sticky;
-    bottom: 0;
-    z-index: 1030;
+/* Application Rate Display */
+#operation h2 {
+    font-size: 3rem;
 }
 
-/* Form Controls Dark Theme */
+/* Form Controls */
 .form-control:focus,
 .form-select:focus {
-    background-color: #212529;
-    border-color: #0d6efd;
-    color: #fff;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-color: #7BB924;
+    box-shadow: 0 0 0 0.25rem rgba(123, 185, 36, 0.25);
 }
 
-.form-check-input:checked {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+/* Button Styles */
+.btn-success {
+    background-color: #7BB924;
+    border-color: #7BB924;
 }
 
-/* List Group Dark */
-.list-group-item {
-    background-color: #212529;
-    border-color: #495057;
+.btn-success:hover {
+    background-color: #6BA520;
+    border-color: #6BA520;
 }
 
-.list-group-item:hover {
-    background-color: #343a40;
+.btn-outline-secondary {
+    border-width: 2px;
 }
 
-/* Mobile Adjustments */
-@media (max-width: 767.98px) {
-    .main-container {
-        height: calc(100vh - 50px - 70px);
-    }
-    
-    .map-view {
-        min-height: 300px;
-    }
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
 }
 
-/* Tablet Adjustments */
-@media (min-width: 768px) and (max-width: 991.98px) {
-    .fpv-preview {
-        width: 240px;
-        height: 135px;
-    }
-    
-    .fpv-content {
-        height: 100px;
-    }
-    
-    .right-sidebar {
-        width: 280px;
-    }
+/* Shadows */
+.shadow {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Desktop Adjustments */
-@media (min-width: 992px) {
-    .right-sidebar {
-        width: 320px;
-    }
+.shadow-lg {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Scrollbar Styling for Dark Theme */
+/* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #212529;
+    background: #f1f1f1;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #495057;
+    background: #c1c1c1;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #6c757d;
+    background: #a8a8a8;
 }
 
-/* Offcanvas Dark Theme */
+/* Responsive Design */
+
+/* Tablet */
+@media (max-width: 991.98px) {
+    .left-panel {
+        display: none;
+    }
+    
+    .info-overlay {
+        font-size: 0.85rem;
+    }
+    
+    .map-actions {
+        min-width: 100px;
+    }
+    
+    .map-actions .btn {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767.98px) {
+    .top-status-bar {
+        height: 50px;
+    }
+    
+    .top-status-bar h5 {
+        font-size: 1rem;
+    }
+    
+    .main-container {
+        height: calc(100vh - 50px);
+    }
+    
+    .info-overlay {
+        margin: 1rem !important;
+        font-size: 0.75rem;
+    }
+    
+    .info-card {
+        padding: 0.75rem !important;
+    }
+    
+    .map-popup {
+        font-size: 0.75rem;
+        padding: 0.5rem !important;
+    }
+    
+    .compass-circle {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .compass-circle i {
+        font-size: 1.5rem !important;
+    }
+    
+    .bottom-status-bar {
+        font-size: 0.8rem;
+    }
+    
+    .bottom-status-bar .fw-bold {
+        font-size: 0.9rem;
+    }
+    
+    .map-actions {
+        min-width: 80px;
+        margin: 1rem !important;
+        margin-bottom: 4rem !important;
+    }
+    
+    .map-actions .btn {
+        padding: 0.4rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Hide some elements on very small screens */
+    .altitude-display,
+    .zoom-control {
+        display: none;
+    }
+}
+
+/* Offcanvas Mobile Panel */
 .offcanvas {
-    border-top: 1px solid #495057;
+    border-radius: 1rem 1rem 0 0;
 }
 
-.offcanvas .nav-tabs {
-    border-bottom: 1px solid #495057;
-}
-
-.offcanvas .nav-link {
-    color: #adb5bd;
-}
-
-.offcanvas .nav-link.active {
-    color: #fff;
-    background-color: transparent;
-    border-bottom: 2px solid #0d6efd;
-}
-
-/* Badge Tweaks */
+/* Badge Styles */
 .badge {
-    font-weight: 500;
-    padding: 0.35em 0.65em;
+    font-weight: 600;
+    padding: 0.4em 0.8em;
 }
 
-/* Button Shadows */
-.btn {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
 }
 
-.btn:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+.compass-circle i.bi-triangle-fill {
+    animation: pulse 2s infinite;
 }
 
 /* Smooth Transitions */
-* {
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+.btn, .nav-link, .info-card, .map-popup {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hover Effects */
+.info-card:hover,
+.map-popup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.map-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Green Accent Color Variables */
+:root {
+    --agras-green: #7BB924;
+    --agras-green-dark: #6BA520;
+    --agras-green-light: #8FD62D;
+}
+
+/* Text Success Override */
+.text-success {
+    color: var(--agras-green) !important;
+}
+
+/* HR Styling */
+hr {
+    opacity: 0.2;
+}
+
+/* Left Panel Specific Styles */
+.left-panel .btn-outline-secondary {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.left-panel h2 {
+    letter-spacing: -0.5px;
+}
+
+/* Map Overlay Improvements */
+.bg-opacity-75 {
+    --bs-bg-opacity: 0.85;
+}
+
+/* Icon Sizing */
+.bi-compass {
+    font-size: 2rem;
+}
+
+/* Connection Point Marker */
+.bi-circle-fill {
+    font-size: 0.6rem;
 }

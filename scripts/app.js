@@ -1,101 +1,122 @@
 /**
- * DJI Agras Drone Interface - Main JavaScript
- * Bootstrap-based UI control logic
+ * DJI Agras Spray Drone Interface - Main JavaScript
+ * Agras-style UI control logic
  */
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DJI Agras UI initialized');
+    console.log('DJI Agras Spray UI initialized');
     
     // Initialize components
-    initSpeedSlider();
-    initFPVControls();
-    initCPHandlers();
-    initFormHandlers();
+    initApplicationRate();
+    initMapControls();
+    initConnectionPoints();
+    initMobilePanel();
 });
 
 /**
- * Speed Slider Handler
+ * Application Rate Control
  */
-function initSpeedSlider() {
-    const slider = document.getElementById('speedSlider');
-    const speedValue = document.getElementById('speedValue');
+function initApplicationRate() {
+    const decreaseBtn = document.querySelector('#operation .btn-outline-secondary:first-of-type');
+    const increaseBtn = document.querySelector('#operation .btn-outline-secondary:last-of-type');
+    const rateDisplay = document.querySelector('#operation h2');
     
-    if (slider && speedValue) {
-        slider.addEventListener('input', function() {
-            speedValue.textContent = this.value + ' m/s';
+    if (decreaseBtn && increaseBtn && rateDisplay) {
+        let currentRate = 3.21;
+        
+        decreaseBtn.addEventListener('click', function() {
+            if (currentRate > 0.5) {
+                currentRate = Math.max(0.5, currentRate - 0.1);
+                updateRate();
+            }
+        });
+        
+        increaseBtn.addEventListener('click', function() {
+            if (currentRate < 10) {
+                currentRate = Math.min(10, currentRate + 0.1);
+                updateRate();
+            }
+        });
+        
+        function updateRate() {
+            rateDisplay.textContent = currentRate.toFixed(2);
+            // Update flow rate (example calculation)
+            const flowRate = (currentRate * 0.555).toFixed(2);
+            const flowDisplay = document.querySelector('#operation .mb-3:nth-of-type(4) strong');
+            if (flowDisplay) {
+                flowDisplay.textContent = flowRate + ' gal/min';
+            }
+            showNotification(`Application rate: ${currentRate.toFixed(2)} gal/acre`, 'success');
+        }
+    }
+}
+
+/**
+ * Map Controls
+ */
+function initMapControls() {
+    // Zoom button
+    const zoomBtn = document.querySelector('.zoom-control .btn');
+    if (zoomBtn) {
+        zoomBtn.addEventListener('click', function() {
+            showNotification('Zoom in', 'info');
+        });
+    }
+    
+    // Map action buttons
+    const exitBtn = document.querySelector('.map-actions .btn-light:first-child');
+    const editBtn = document.querySelector('.map-actions .btn-light:last-child');
+    const startBtn = document.querySelector('.map-actions .btn-success');
+    
+    if (exitBtn) {
+        exitBtn.addEventListener('click', function() {
+            showNotification('Exiting mission planning', 'warning');
+        });
+    }
+    
+    if (editBtn) {
+        editBtn.addEventListener('click', function() {
+            showNotification('Edit mode activated', 'info');
+        });
+    }
+    
+    if (startBtn) {
+        startBtn.addEventListener('click', function() {
+            showNotification('Starting mission...', 'success');
+            // Simulate mission start
+            setTimeout(() => {
+                showNotification('Mission in progress!', 'success');
+            }, 2000);
         });
     }
 }
 
 /**
- * FPV Preview Controls
+ * Connection Point Management
  */
-function initFPVControls() {
-    const closeFpvBtn = document.getElementById('closeFpv');
-    const fpvPreview = document.querySelector('.fpv-preview');
-    
-    if (closeFpvBtn && fpvPreview) {
-        closeFpvBtn.addEventListener('click', function() {
-            fpvPreview.style.display = 'none';
+function initConnectionPoints() {
+    const addCPBtn = document.querySelector('.map-popup .btn-light');
+    if (addCPBtn) {
+        addCPBtn.addEventListener('click', function() {
+            showNotification('Connection point added', 'success');
+            // In real app, would add marker to map
         });
     }
 }
 
 /**
- * Connection Point (CP) Handlers
+ * Mobile Panel Controls
  */
-function initCPHandlers() {
-    // View CP Detail button handler is defined globally
-    console.log('CP handlers initialized');
-}
-
-/**
- * View Connection Point Detail
- * @param {string} cpId - Connection Point ID
- */
-function viewCPDetail(cpId) {
-    console.log('Viewing CP:', cpId);
-    
-    // Switch to CP Detail tab
-    const cpDetailTab = document.getElementById('cp-detail-tab');
-    if (cpDetailTab) {
-        const tab = new bootstrap.Tab(cpDetailTab);
-        tab.show();
-    }
-    
-    // Update form with CP data (mock)
-    const cpNameInput = document.getElementById('cpName');
-    if (cpNameInput) {
-        cpNameInput.value = cpId;
-    }
-    
-    // Show notification
-    showNotification('Loaded: ' + cpId, 'info');
-}
-
-/**
- * Form Submit Handlers
- */
-function initFormHandlers() {
-    // CP Detail Form
-    const cpDetailForm = document.querySelector('#cp-detail form');
-    if (cpDetailForm) {
-        cpDetailForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const cpName = document.getElementById('cpName').value;
-            showNotification('CP saved: ' + cpName, 'success');
+function initMobilePanel() {
+    const mobilePanel = document.getElementById('mobilePanel');
+    if (mobilePanel) {
+        mobilePanel.addEventListener('shown.bs.offcanvas', function() {
+            console.log('Mobile control panel opened');
         });
-    }
-    
-    // Route Settings Form
-    const routeSettingsForm = document.querySelector('#route-settings form');
-    if (routeSettingsForm) {
-        routeSettingsForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const scanDirection = document.getElementById('scanDirection').value;
-            const lineSpacing = document.getElementById('lineSpacing').value;
-            showNotification('Route settings applied: ' + scanDirection + ', ' + lineSpacing + 'm', 'success');
+        
+        mobilePanel.addEventListener('hidden.bs.offcanvas', function() {
+            console.log('Mobile control panel closed');
         });
     }
 }
@@ -106,7 +127,7 @@ function initFormHandlers() {
  * @param {string} type - Bootstrap color type (success, info, warning, danger)
  */
 function showNotification(message, type = 'info') {
-    // Create toast element if not exists
+    // Create toast container if not exists
     let toastContainer = document.getElementById('toastContainer');
     if (!toastContainer) {
         toastContainer = document.createElement('div');
@@ -118,8 +139,12 @@ function showNotification(message, type = 'info') {
     
     // Create toast
     const toastId = 'toast-' + Date.now();
+    const bgClass = type === 'success' ? 'bg-success' : 
+                   type === 'warning' ? 'bg-warning' :
+                   type === 'danger' ? 'bg-danger' : 'bg-info';
+    
     const toastHTML = `
-        <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
                     ${message}
@@ -142,52 +167,48 @@ function showNotification(message, type = 'info') {
 }
 
 /**
- * Mission Control Functions
+ * Simulate Drone Status Updates
  */
-function takeoff() {
-    showNotification('Takeoff initiated...', 'success');
-    console.log('Drone takeoff');
-}
-
-function land() {
-    showNotification('Landing initiated...', 'warning');
-    console.log('Drone landing');
+function updateDroneStatus() {
+    // This would be connected to real drone telemetry
+    const speed = (Math.random() * 10).toFixed(1);
+    const distance = (Math.random() * 50).toFixed(1);
+    const flow = (Math.random() * 2).toFixed(2);
+    
+    // Update displays if they exist
+    const statusBar = document.querySelector('.bottom-status-bar');
+    if (statusBar) {
+        const values = statusBar.querySelectorAll('.fw-bold');
+        if (values.length >= 3) {
+            // values[0].innerHTML = `${speed}<small>ft/s</small>`;
+            // values[1].innerHTML = `${distance}<small>ft</small>`;
+            // values[2].innerHTML = `${flow}<small>gal/min</small>`;
+        }
+    }
 }
 
 /**
- * Map Control Functions (placeholders for Leaflet/Mapbox integration)
+ * Template Selection Handler
  */
-function zoomIn() {
-    console.log('Zoom in');
-    showNotification('Zooming in', 'info');
-}
-
-function zoomOut() {
-    console.log('Zoom out');
-    showNotification('Zooming out', 'info');
-}
-
-function centerMap() {
-    console.log('Center map on drone');
-    showNotification('Map centered', 'info');
+function selectTemplate() {
+    showNotification('Template selection opened', 'info');
+    // In real app, would show template picker modal
 }
 
 /**
- * Connection Point Management
+ * Refresh Settings
  */
-function addNewCP() {
-    console.log('Adding new connection point');
-    showNotification('New CP created', 'success');
-    // In real app, would open form modal or create marker on map
+function refreshSettings() {
+    showNotification('Settings refreshed', 'success');
+    // Reset to default values
 }
 
 /**
- * Export functions for global use
+ * Export functions for inline event handlers
  */
-window.viewCPDetail = viewCPDetail;
-window.takeoff = takeoff;
-window.land = land;
-window.zoomIn = zoomIn;
-window.zoomOut = zoomOut;
-window.centerMap = centerMap;
-window.addNewCP = addNewCP;
+window.selectTemplate = selectTemplate;
+window.refreshSettings = refreshSettings;
+window.showNotification = showNotification;
+
+// Optional: Auto-update drone status every 2 seconds (when connected)
+// setInterval(updateDroneStatus, 2000);

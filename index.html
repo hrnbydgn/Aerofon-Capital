@@ -3,37 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DJI Agras Drone Interface</title>
+    <title>DJI Agras Spray Drone Interface</title>
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="./styles/custom.css">
 </head>
-<body class="bg-dark text-light">
+<body>
 
-    <!-- Top Status Bar -->
-    <header class="top-status-bar bg-black border-bottom border-secondary py-2 px-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <!-- Left Info -->
+    <!-- Top Status Bar - Green -->
+    <header class="top-status-bar">
+        <div class="d-flex justify-content-between align-items-center h-100 px-3">
+            <!-- Left - Ready Status -->
             <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-success">DJI Agras T40</span>
-                <span class="badge bg-primary">A-Mode</span>
-                <span class="badge bg-warning text-dark">
-                    <i class="bi bi-broadcast"></i> RTK Fixed
-                </span>
+                <button class="btn btn-light btn-sm">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h5 class="mb-0 text-white fw-bold">Ready to go</h5>
             </div>
             
             <!-- Right Status Icons -->
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-success">
-                    <i class="bi bi-battery-full"></i> 87%
-                </span>
-                <span class="text-warning">
-                    <i class="bi bi-controller"></i> 72%
-                </span>
-                <span class="text-info">
-                    <i class="bi bi-reception-4"></i> Strong
-                </span>
+            <div class="d-flex align-items-center gap-3 text-white">
+                <span><i class="bi bi-broadcast"></i></span>
+                <span><i class="bi bi-reception-4"></i> <strong>28</strong></span>
+                <span><i class="bi bi-broadcast-pin"></i> <strong class="text-success">GNSS</strong></span>
+                <span><i class="bi bi-battery-full"></i> <strong>90%</strong></span>
+                <span><i class="bi bi-droplet-fill"></i> <strong>9.6/10.6</strong>gal</span>
+                <span class="badge bg-success"><strong>91</strong></span>
+                <button class="btn btn-light btn-sm">
+                    <i class="bi bi-gear"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -41,263 +40,216 @@
     <!-- Main Container -->
     <div class="main-container d-flex">
         
-        <!-- Left Toolbar (Desktop only, lg and above) -->
-        <aside class="left-toolbar d-none d-lg-flex flex-column bg-dark border-end border-secondary">
-            <button class="btn btn-outline-secondary mb-2" title="Fields">
-                <i class="bi bi-grid-3x3"></i>
-            </button>
-            <button class="btn btn-outline-secondary mb-2" title="Layers">
-                <i class="bi bi-layers"></i>
-            </button>
-            <button class="btn btn-outline-secondary mb-2" title="Zoom In">
-                <i class="bi bi-zoom-in"></i>
-            </button>
-            <button class="btn btn-outline-secondary mb-2" title="Center">
-                <i class="bi bi-crosshair"></i>
-            </button>
+        <!-- Left Panel - White -->
+        <aside class="left-panel bg-white border-end">
+            <!-- Tabs -->
+            <ul class="nav nav-pills mb-3" id="leftPanelTabs" role="tablist">
+                <li class="nav-item flex-fill" role="presentation">
+                    <button class="nav-link active w-100 rounded-pill" id="operation-tab" data-bs-toggle="tab" data-bs-target="#operation" type="button" role="tab">
+                        Operation
+                    </button>
+                </li>
+                <li class="nav-item flex-fill" role="presentation">
+                    <button class="nav-link w-100 rounded-pill" id="flight-tab" data-bs-toggle="tab" data-bs-target="#flight" type="button" role="tab">
+                        Flight
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="leftPanelContent">
+                <!-- Operation Tab -->
+                <div class="tab-pane fade show active" id="operation" role="tabpanel">
+                    <!-- Template Selection -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>No template applied</strong>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-down"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary ms-1"><i class="bi bi-arrow-clockwise"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Application Rate -->
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Application Rate (gal/acre)</label>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <button class="btn btn-outline-secondary">−</button>
+                            <h2 class="mb-0 mx-3 text-success fw-bold">3.21</h2>
+                            <button class="btn btn-outline-secondary">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Flow Rate -->
+                    <div class="mb-3 d-flex justify-content-between">
+                        <span class="text-muted">Flow</span>
+                        <strong>1.78 gal/min</strong>
+                    </div>
+
+                    <!-- Spray Droplet Size -->
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Spray Droplet Size</span>
+                        <span class="text-success fw-bold">320<small>μm</small> <i class="bi bi-chevron-right"></i></span>
+                    </div>
+
+                    <hr>
+
+                    <!-- Additional Controls Placeholder -->
+                    <div class="mt-4">
+                        <div class="bg-light p-3 rounded text-center text-muted small">
+                            Additional spray settings
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Tab -->
+                <div class="tab-pane fade" id="flight" role="tabpanel">
+                    <p class="text-muted">Flight parameters and settings...</p>
+                </div>
+            </div>
         </aside>
 
         <!-- Map Area -->
         <div class="map-container position-relative flex-grow-1">
-            <div id="map" class="map-view bg-secondary d-flex align-items-center justify-content-center">
-                <span class="text-muted">Map Area (Leaflet/Mapbox placeholder)</span>
+            <div id="map" class="map-view">
+                <span class="text-muted position-absolute top-50 start-50 translate-middle">Map Area - Satellite View Placeholder</span>
             </div>
 
-            <!-- FPV Preview (Desktop/Tablet - absolute positioned) -->
-            <div class="fpv-preview d-none d-md-block position-absolute top-0 end-0 m-3 bg-black border border-secondary rounded shadow-lg">
-                <div class="fpv-header bg-dark px-2 py-1 border-bottom border-secondary d-flex justify-content-between align-items-center">
-                    <small class="text-light">FPV Camera</small>
-                    <button class="btn btn-sm btn-close btn-close-white" id="closeFpv"></button>
+            <!-- Top Right Info Overlay -->
+            <div class="info-overlay position-absolute top-0 end-0 m-3">
+                <div class="info-card bg-dark bg-opacity-75 text-white p-2 rounded mb-2">
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-sm btn-outline-light"><i class="bi bi-signpost-2"></i></button>
+                        <button class="btn btn-sm btn-outline-light"><i class="bi bi-compass"></i></button>
+                        <button class="btn btn-sm btn-outline-light"><i class="bi bi-geo-alt"></i></button>
+                        <button class="btn btn-sm btn-outline-light"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-light"><i class="bi bi-layers"></i></button>
+                    </div>
                 </div>
-                <div class="fpv-content d-flex align-items-center justify-content-center text-muted">
-                    <i class="bi bi-camera-video fs-1"></i>
+                <div class="info-card bg-dark bg-opacity-75 text-white p-3 rounded">
+                    <div class="mb-2">
+                        <small>Field Accuracy</small>
+                        <div class="fw-bold">High(RTK)</div>
+                    </div>
+                    <div class="mb-2">
+                        <small>Task Area</small>
+                        <div class="fw-bold">0.18 acre</div>
+                    </div>
+                    <div>
+                        <small>Amount Sprayed</small>
+                        <div class="fw-bold">0.58 gal</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Right Sidebar (Desktop/Tablet) -->
-        <aside class="right-sidebar d-none d-md-block bg-dark border-start border-secondary">
-            <!-- Tabs Navigation -->
-            <ul class="nav nav-tabs bg-black border-bottom border-secondary" id="rightPanelTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="cp-list-tab" data-bs-toggle="tab" data-bs-target="#cp-list" type="button" role="tab">
-                        CP List
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cp-detail-tab" data-bs-toggle="tab" data-bs-target="#cp-detail" type="button" role="tab">
-                        CP Detail
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="route-settings-tab" data-bs-toggle="tab" data-bs-target="#route-settings" type="button" role="tab">
-                        Route
-                    </button>
-                </li>
-            </ul>
+            <!-- Map Popup - Rectify Offset -->
+            <div class="map-popup position-absolute bg-white rounded shadow p-2" style="top: 30%; right: 25%;">
+                <strong>Rectify Offset</strong>
+            </div>
 
-            <!-- Tabs Content -->
-            <div class="tab-content p-3" id="rightPanelTabsContent">
-                
-                <!-- CP List Tab -->
-                <div class="tab-pane fade show active" id="cp-list" role="tabpanel">
-                    <h6 class="mb-3">Connection Points</h6>
-                    <div class="list-group">
-                        <div class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
-                            <span>CP-001</span>
-                            <button class="btn btn-sm btn-outline-primary" onclick="viewCPDetail('CP-001')">View</button>
-                        </div>
-                        <div class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
-                            <span>CP-002</span>
-                            <button class="btn btn-sm btn-outline-primary" onclick="viewCPDetail('CP-002')">View</button>
-                        </div>
-                        <div class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
-                            <span>CP-003</span>
-                            <button class="btn btn-sm btn-outline-primary" onclick="viewCPDetail('CP-003')">View</button>
+            <!-- Map Popup - Connection Point -->
+            <div class="map-popup position-absolute bg-dark text-white rounded shadow p-3" style="top: 50%; right: 15%;">
+                <div class="mb-2">
+                    <i class="bi bi-circle-fill text-danger"></i> <strong>Connection Point</strong>
+                </div>
+                <button class="btn btn-light w-100">Add</button>
+            </div>
+
+            <!-- Map Action Buttons - Right Side -->
+            <div class="map-actions position-absolute end-0 bottom-0 m-3 mb-5">
+                <button class="btn btn-light mb-2 w-100 shadow">
+                    <i class="bi bi-box-arrow-right"></i> Exit
+                </button>
+                <button class="btn btn-light mb-2 w-100 shadow">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+                <button class="btn btn-success w-100 shadow">
+                    <i class="bi bi-upload"></i> Start
+                </button>
+            </div>
+
+            <!-- Drone Compass/Position Indicator - Bottom Left -->
+            <div class="drone-indicator position-absolute bottom-0 start-0 m-3">
+                <div class="compass-circle bg-dark bg-opacity-75 text-white rounded-circle d-flex align-items-center justify-content-center">
+                    <div class="text-center">
+                        <i class="bi bi-compass fs-1"></i>
+                        <div class="small">
+                            <i class="bi bi-house-fill"></i>
                         </div>
                     </div>
-                    <button class="btn btn-success w-100 mt-3">
-                        <i class="bi bi-plus-circle"></i> Add New CP
-                    </button>
                 </div>
-
-                <!-- CP Detail Tab -->
-                <div class="tab-pane fade" id="cp-detail" role="tabpanel">
-                    <h6 class="mb-3">Connection Point Detail</h6>
-                    <form>
-                        <div class="mb-3">
-                            <label for="cpName" class="form-label">Name</label>
-                            <input type="text" class="form-control bg-dark text-light border-secondary" id="cpName" value="CP-001">
-                        </div>
-                        <div class="mb-3">
-                            <label for="cpActive" class="form-label">Active</label>
-                            <select class="form-select bg-dark text-light border-secondary" id="cpActive">
-                                <option selected>Yes</option>
-                                <option>No</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="cpDirection" class="form-label">Preferred Direction</label>
-                            <select class="form-select bg-dark text-light border-secondary" id="cpDirection">
-                                <option>North</option>
-                                <option>East</option>
-                                <option selected>South</option>
-                                <option>West</option>
-                            </select>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="cpObstacle" checked>
-                            <label class="form-check-label" for="cpObstacle">
-                                Use for obstacle avoidance
-                            </label>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-save"></i> Save Changes
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Route Settings Tab -->
-                <div class="tab-pane fade" id="route-settings" role="tabpanel">
-                    <h6 class="mb-3">Route Settings</h6>
-                    <form>
-                        <div class="mb-3">
-                            <label for="scanDirection" class="form-label">Scan Direction</label>
-                            <select class="form-select bg-dark text-light border-secondary" id="scanDirection">
-                                <option selected>North-South (N–S)</option>
-                                <option>East-West (E–W)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="lineSpacing" class="form-label">Line Spacing (m)</label>
-                            <input type="number" class="form-control bg-dark text-light border-secondary" id="lineSpacing" value="5.0" step="0.5">
-                        </div>
-                        <div class="mb-3">
-                            <label for="turningBehavior" class="form-label">Turning Behavior</label>
-                            <select class="form-select bg-dark text-light border-secondary" id="turningBehavior">
-                                <option selected>Adaptive</option>
-                                <option>Smooth</option>
-                                <option>Sharp</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-warning w-100">
-                            <i class="bi bi-gear"></i> Apply Settings
-                        </button>
-                    </form>
+                <div class="mt-2 text-center small bg-dark bg-opacity-75 text-white p-1 rounded">
+                    <i class="bi bi-triangle-fill text-danger"></i> Relative to Home
                 </div>
             </div>
-        </aside>
 
-    </div>
-
-    <!-- Bottom Task Bar -->
-    <footer class="bottom-task-bar bg-black border-top border-secondary py-2 px-3">
-        <div class="row align-items-center g-2">
-            <!-- Mission Buttons -->
-            <div class="col-12 col-md-4">
-                <div class="d-flex gap-2">
-                    <button class="btn btn-success flex-fill">
-                        <i class="bi bi-arrow-up-circle"></i> Takeoff
-                    </button>
-                    <button class="btn btn-danger flex-fill">
-                        <i class="bi bi-arrow-down-circle"></i> Land
-                    </button>
+            <!-- Bottom Center Status Bar -->
+            <div class="bottom-status-bar position-absolute bottom-0 start-50 translate-middle-x mb-3">
+                <div class="bg-dark bg-opacity-75 text-white rounded d-flex gap-4 px-4 py-2">
+                    <div class="text-center">
+                        <div class="small text-muted">Speed</div>
+                        <div class="fw-bold">0.0<small>ft/s</small></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="small text-muted">Distance</div>
+                        <div class="fw-bold">2.5<small>ft</small></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="small text-muted">Flow</div>
+                        <div class="fw-bold">0.0<small>gal/min</small></div>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Mission Info -->
-            <div class="col-12 col-md-4 text-center">
-                <small class="text-muted">
-                    Remaining: <span class="text-warning">12.5 ha</span> | 
-                    ETA: <span class="text-info">45 min</span>
-                </small>
-            </div>
-            
-            <!-- Speed Control -->
-            <div class="col-12 col-md-4">
-                <div class="d-flex align-items-center gap-2">
-                    <small class="text-muted">Speed:</small>
-                    <input type="range" class="form-range flex-grow-1" min="1" max="10" value="5" id="speedSlider">
-                    <span class="badge bg-info" id="speedValue">5 m/s</span>
+
+            <!-- Altitude Display - Top Center Map -->
+            <div class="altitude-display position-absolute top-0 start-50 translate-middle-x mt-3">
+                <div class="bg-dark bg-opacity-75 text-white rounded px-3 py-1">
+                    <strong>5ft</strong>
                 </div>
+            </div>
+
+            <!-- Zoom Control - Top Left Map -->
+            <div class="zoom-control position-absolute top-0 start-0 m-3">
+                <button class="btn btn-light btn-sm shadow">
+                    <i class="bi bi-plus"></i>
+                </button>
             </div>
         </div>
-    </footer>
 
-    <!-- Mobile FPV Modal -->
-    <div class="modal fade" id="fpvModal" tabindex="-1">
-        <div class="modal-dialog modal-fullscreen-sm-down">
-            <div class="modal-content bg-dark text-light">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title">FPV Camera</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body d-flex align-items-center justify-content-center" style="min-height: 300px;">
-                    <i class="bi bi-camera-video fs-1 text-muted"></i>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Mobile Bottom Sheet Toggle (visible on mobile only) -->
-    <button class="btn btn-primary position-fixed bottom-0 end-0 m-3 d-md-none rounded-circle shadow-lg" 
+    <button class="btn btn-success position-fixed bottom-0 end-0 m-3 d-lg-none rounded-circle shadow-lg" 
             style="width: 56px; height: 56px; z-index: 1040;" 
             data-bs-toggle="offcanvas" 
             data-bs-target="#mobilePanel">
-        <i class="bi bi-list fs-4"></i>
+        <i class="bi bi-sliders fs-4"></i>
     </button>
 
     <!-- Mobile Bottom Sheet (Offcanvas) -->
-    <div class="offcanvas offcanvas-bottom bg-dark text-light" tabindex="-1" id="mobilePanel" style="height: 70vh;">
-        <div class="offcanvas-header border-bottom border-secondary">
+    <div class="offcanvas offcanvas-bottom bg-white" tabindex="-1" id="mobilePanel" style="height: 70vh;">
+        <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title">Control Panel</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body">
-            <!-- Same tabs as right sidebar -->
-            <ul class="nav nav-tabs border-bottom border-secondary mb-3" id="mobilePanelTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#mobile-cp-list" type="button">
-                        CP List
-                    </button>
+            <!-- Same content as left panel -->
+            <ul class="nav nav-pills mb-3">
+                <li class="nav-item flex-fill">
+                    <button class="nav-link active w-100 rounded-pill">Operation</button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#mobile-cp-detail" type="button">
-                        Detail
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#mobile-route" type="button">
-                        Route
-                    </button>
+                <li class="nav-item flex-fill">
+                    <button class="nav-link w-100 rounded-pill">Flight</button>
                 </li>
             </ul>
-
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="mobile-cp-list">
-                    <div class="list-group">
-                        <div class="list-group-item bg-dark text-light border-secondary">CP-001</div>
-                        <div class="list-group-item bg-dark text-light border-secondary">CP-002</div>
-                        <div class="list-group-item bg-dark text-light border-secondary">CP-003</div>
-                    </div>
-                </div>
-                <div class="tab-pane fade" id="mobile-cp-detail">
-                    <p class="text-muted">Connection point details...</p>
-                </div>
-                <div class="tab-pane fade" id="mobile-route">
-                    <p class="text-muted">Route settings...</p>
-                </div>
+            <div class="text-center text-muted">
+                Operation controls (mobile view)
             </div>
         </div>
     </div>
-
-    <!-- FPV Toggle Button (Mobile only) -->
-    <button class="btn btn-info position-fixed top-50 end-0 m-2 d-md-none" 
-            data-bs-toggle="modal" 
-            data-bs-target="#fpvModal"
-            style="z-index: 1030;">
-        <i class="bi bi-camera-video"></i>
-    </button>
 
     <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
