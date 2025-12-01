@@ -1,0 +1,37 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+error.log
+
+# Uploads
+public/images/*
+!public/images/.gitkeep
+
+# Config (production'da şifreleri içerebilir)
+# includes/config.php
+
+# Composer
+vendor/
+composer.lock
+
+# Node modules (eğer eklenirse)
+node_modules/
+
+# Cache
+cache/
+tmp/
+
+# Backup
+*.backup
+*.bak
+*.sql.gz

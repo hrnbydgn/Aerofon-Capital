@@ -1,0 +1,74 @@
+╔══════════════════════════════════════════════════════════════╗
+║        PROJE YÖNETİM SİSTEMİ - HIZLI BAŞLANGIÇ             ║
+╚══════════════════════════════════════════════════════════════╝
+
+🚀 KURULUM ADIMLARI:
+
+1. VERİTABANI OLUŞTURMA
+   -------------------
+   mysql -u root -p
+   
+   MySQL'de:
+   CREATE DATABASE project_management;
+   USE project_management;
+   SOURCE database.sql;
+   
+   veya phpMyAdmin'den database.sql dosyasını import edin
+
+2. YAPILANDIRMA
+   ------------
+   includes/config.php dosyasını düzenleyin:
+   
+   define('DB_HOST', 'localhost');
+   define('DB_NAME', 'project_management');
+   define('DB_USER', 'root');
+   define('DB_PASS', 'sizin_sifreniz');
+
+3. WEB SUNUCUSUNU BAŞLATIN
+   -----------------------
+   
+   PHP Built-in Server (Geliştirme):
+   php -S localhost:8000 -t public/
+   
+   XAMPP/WAMP:
+   Projeyi htdocs klasörüne kopyalayın
+   http://localhost/project-management/public
+   
+   Apache/Nginx:
+   Virtual host oluşturun (KURULUM.md'de detaylar)
+
+4. DEMO HESAPLAR
+   -------------
+   
+   Admin Hesabı:
+   E-posta: admin@example.com
+   Şifre: password
+   
+   Demo Hesabı:
+   E-posta: demo@example.com
+   Şifre: password
+
+📚 DÖKÜMANTASYON:
+   - README.md: Genel bilgi ve özellikler
+   - KURULUM.md: Detaylı kurulum rehberi
+
+🎯 İLK ADIMLAR:
+   1. Demo hesapla giriş yapın
+   2. "Yeni Proje" oluşturun
+   3. Projeye üye ekleyin
+   4. Görev oluşturun
+   5. Kanban board'da görevleri yönetin
+
+🐛 SORUN GİDERME:
+   - Veritabanı bağlantı hatası: config.php'yi kontrol edin
+   - 404 hatası: .htaccess ve mod_rewrite'ı kontrol edin
+   - Session hatası: PHP session dizinini kontrol edin
+
+💡 ÖNEMLİ NOTLAR:
+   - Production'da HTTPS kullanın
+   - Hata gösterimini kapatın
+   - Güçlü şifreler kullanın
+   - Düzenli yedekleme yapın
+
+✨ İyi eğlenceler!
+
