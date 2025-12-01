@@ -1,4 +1,4 @@
-# Proje Yönetim Sistemi
+# Emirhanın proje yönetimi
 
 Modern ve profesyonel bir proje yönetimi web uygulaması. PHP backend ve modern frontend teknolojileriyle geliştirilmiştir.
 

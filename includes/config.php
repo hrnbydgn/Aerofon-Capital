@@ -15,7 +15,7 @@ define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
 // Uygulama Ayarları
-define('APP_NAME', 'Proje Yönetim Sistemi');
+define('APP_NAME', 'Emirhanın proje yönetimi');
 define('APP_URL', 'http://localhost');
 define('BASE_PATH', dirname(__DIR__));
 

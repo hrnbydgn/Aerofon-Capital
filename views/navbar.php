@@ -7,7 +7,7 @@ $currentUser = getCurrentUser();
             <div class="flex items-center">
                 <a href="/public/dashboard.php" class="text-xl font-bold text-blue-500">
                     <i class="fas fa-project-diagram mr-2"></i>
-                    Proje Yönetim
+                    Emirhanın proje yönetimi
                 </a>
                 <?php if (isLoggedIn()): ?>
                 <div class="ml-10 flex space-x-4">

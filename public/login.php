@@ -19,7 +19,7 @@ $pageTitle = 'Giriş Yap';
             <h1 class="text-4xl font-bold text-blue-500 mb-2">
                 <i class="fas fa-project-diagram"></i>
             </h1>
-            <h2 class="text-3xl font-bold">Proje Yönetim Sistemi</h2>
+            <h2 class="text-3xl font-bold">Emirhanın proje yönetimi</h2>
             <p class="mt-2 text-gray-400">Hesabınıza giriş yapın</p>
         </div>
         
