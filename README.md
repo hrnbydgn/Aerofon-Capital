@@ -21,14 +21,42 @@ Web tabanlı, mobil uyumlu drone programlama simülasyonu. Blockly ile sürükle
 
 ## 🎯 Drone Komutları
 
+### ✈️ Temel Hareket
 | Blok | Açıklama |
 |------|----------|
 | 🚀 Kalkış Yap | Drone'u 3m yüksekliğe kaldırır |
 | 🛬 İniş Yap | Drone'u yere indirir |
 | İleri/Geri X m | Drone'u X metre hareket ettirir |
 | Yüksel/Alçal X m | Drone'u dikey hareket ettirir |
-| Sola/Sağa Dön | Drone'u 90° döndürür |
+| Sola/Sağa Dön (90°) | Drone'u 90° döndürür |
+| Sola/Sağa Dön X° | Drone'u özel açı kadar döndürür |
+
+### 🎪 İleri Hareket
+| Blok | Açıklama |
+|------|----------|
+| 🤸 Takla | Drone 4 yönde takla atar (İleri/Geri/Sol/Sağ) |
+| ⭕ Daire Çiz | Drone belirtilen yarıçapta daire çizer |
+| ⏸️ Havada Dur | Drone yerinde X saniye bekler |
+
+### ⚙️ Ayarlar
+| Blok | Açıklama |
+|------|----------|
+| ⚡ Hız | Drone hızını ayarlar (Yavaş/Normal/Hızlı) |
+| 💡 LED | Drone LED rengini değiştirir (6 renk) |
+| ⏱️ Bekle | Belirtilen süre bekler |
+
+### 🔄 Döngü
+| Blok | Açıklama |
+|------|----------|
 | Tekrarla | Komutları döngüye alır |
+
+## ⚡ Simülasyon Hızı
+
+Sağ alttaki hız slider'ı ile simülasyon hızını ayarlayabilirsiniz:
+- **0.5x** - Yavaş (Detaylı izleme için)
+- **1x** - Normal (Varsayılan)
+- **2x** - Hızlı
+- **3x** - Çok Hızlı
 
 ## 🐛 Hata Giderme
 

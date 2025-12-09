@@ -45,12 +45,17 @@
             .btn { padding: 6px 12px !important; font-size: 11px !important; }
             #controls { bottom: 10px !important; right: 10px !important; gap: 5px !important;}
             #status-panel { font-size: 11px !important; padding: 6px !important; top: 5px !important; left: 5px !important; }
+            #speed-control { padding: 6px 10px !important; font-size: 10px !important; }
+            #speed-slider { width: 70px !important; }
         }
 
         /* KONTROL PANELİ */
         #controls {
             position: absolute; bottom: 20px; right: 20px;
-            display: flex; gap: 10px; z-index: 100;
+            display: flex; flex-direction: column; gap: 10px; z-index: 100;
+        }
+        #button-row {
+            display: flex; gap: 10px;
         }
         .btn {
             padding: 10px 20px; border: none; border-radius: 50px;
@@ -60,6 +65,29 @@
         .btn:active { transform: scale(0.95); }
         .btn-run { background: #27ae60; color: white; }
         .btn-reset { background: #c0392b; color: white; }
+        
+        /* HIZ KONTROLÜ */
+        #speed-control {
+            background: rgba(0, 0, 0, 0.7); padding: 10px 15px; border-radius: 25px;
+            display: flex; align-items: center; gap: 10px; color: white;
+            font-size: 12px; font-weight: bold;
+        }
+        #speed-slider {
+            width: 100px; height: 6px; cursor: pointer;
+            background: rgba(255,255,255,0.3); border-radius: 3px;
+            outline: none; appearance: none;
+        }
+        #speed-slider::-webkit-slider-thumb {
+            appearance: none; width: 16px; height: 16px;
+            background: #3498db; border-radius: 50%; cursor: pointer;
+        }
+        #speed-slider::-moz-range-thumb {
+            width: 16px; height: 16px;
+            background: #3498db; border-radius: 50%; cursor: pointer; border: none;
+        }
+        #speed-value {
+            min-width: 35px; text-align: center;
+        }
         
         /* BİLGİ PANELİ */
         #status-panel {
@@ -100,14 +128,21 @@
                 <div>Hedefler: <span id="mission-count">2</span></div>
             </div>
             <div id="controls">
-                <button class="btn btn-run" onclick="runCode()">▶ ÇALIŞTIR</button>
-                <button class="btn btn-reset" onclick="resetApp()">↺ SIFIRLA</button>
+                <div id="button-row">
+                    <button class="btn btn-run" onclick="runCode()">▶ ÇALIŞTIR</button>
+                    <button class="btn btn-reset" onclick="resetApp()">↺ SIFIRLA</button>
+                </div>
+                <div id="speed-control">
+                    <span>⚡ Hız:</span>
+                    <input type="range" id="speed-slider" min="0.5" max="3" step="0.5" value="1">
+                    <span id="speed-value">1x</span>
+                </div>
             </div>
         </div>
     </div>
 
     <xml id="toolbox" style="display: none">
-        <category name="Hareket" colour="#3498db">
+        <category name="✈️ Temel Hareket" colour="#3498db">
             <block type="drone_takeoff"></block>
             <block type="drone_land"></block>
             <block type="drone_move">
@@ -129,8 +164,49 @@
             <block type="drone_turn">
                 <field name="DIR">LEFT</field>
             </block>
+            <block type="drone_turn_angle">
+                <value name="ANGLE">
+                    <shadow type="math_number">
+                        <field name="NUM">45</field>
+                    </shadow>
+                </value>
+            </block>
         </category>
-        <category name="Döngü" colour="#e67e22">
+        <category name="🎪 İleri Hareket" colour="#9b59b6">
+            <block type="drone_flip">
+                <field name="DIR">FORWARD</field>
+            </block>
+            <block type="drone_circle">
+                <value name="RADIUS">
+                    <shadow type="math_number">
+                        <field name="NUM">3</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="drone_hover">
+                <value name="TIME">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="⚙️ Ayarlar" colour="#16a085">
+            <block type="drone_speed">
+                <field name="SPEED">NORMAL</field>
+            </block>
+            <block type="drone_led">
+                <field name="COLOR">RED</field>
+            </block>
+            <block type="drone_wait">
+                <value name="TIME">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="🔄 Döngü" colour="#e67e22">
             <block type="controls_repeat_ext">
                 <value name="TIMES">
                     <shadow type="math_number">
@@ -179,6 +255,7 @@
         // DRONE MODELİ
         const droneGroup = new THREE.Group();
         const rotors = [];
+        let droneLED;
 
         function createAdvancedDrone() {
             const darkMat = new THREE.MeshPhongMaterial({ color: 0x2a2a2a });
@@ -189,10 +266,10 @@
             const bodyHub = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.15, 16), darkMat);
             droneGroup.add(bodyHub);
 
-            // Göz
-            const camEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshPhongMaterial({color: 0x00ffff}));
-            camEye.position.set(0.35, 0.1, 0);
-            droneGroup.add(camEye);
+            // Göz (LED)
+            droneLED = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshPhongMaterial({color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.5}));
+            droneLED.position.set(0.35, 0.1, 0);
+            droneGroup.add(droneLED);
 
             // Kollar
             const armConfigs = [[0.8, 0.8, true], [0.8, -0.8, true], [-0.8, 0.8, false], [-0.8, -0.8, false]];
@@ -303,6 +380,115 @@
                 this.setTooltip("Drone'u 90 derece döndürür");
             }
         };
+        
+        Blockly.Blocks['drone_turn_angle'] = {
+            init: function() {
+                this.appendValueInput("ANGLE")
+                    .setCheck("Number")
+                    .appendField(new Blockly.FieldDropdown([["Sola", "LEFT"], ["Sağa", "RIGHT"]]), "DIR")
+                    .appendField("Dön");
+                this.appendDummyInput().appendField("°");
+                this.setInputsInline(true);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(290);
+                this.setTooltip("Drone'u belirtilen açı kadar döndürür");
+            }
+        };
+        
+        Blockly.Blocks['drone_flip'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("🤸 Takla")
+                    .appendField(new Blockly.FieldDropdown([
+                        ["İleri", "FORWARD"], 
+                        ["Geri", "BACK"], 
+                        ["Sol", "LEFT"], 
+                        ["Sağ", "RIGHT"]
+                    ]), "DIR");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(271);
+                this.setTooltip("Drone takla atar");
+            }
+        };
+        
+        Blockly.Blocks['drone_circle'] = {
+            init: function() {
+                this.appendValueInput("RADIUS")
+                    .setCheck("Number")
+                    .appendField("⭕ Daire Çiz (yarıçap:");
+                this.appendDummyInput().appendField("m)");
+                this.setInputsInline(true);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(271);
+                this.setTooltip("Drone daire şeklinde uçar");
+            }
+        };
+        
+        Blockly.Blocks['drone_hover'] = {
+            init: function() {
+                this.appendValueInput("TIME")
+                    .setCheck("Number")
+                    .appendField("⏸️ Havada Dur");
+                this.appendDummyInput().appendField("saniye");
+                this.setInputsInline(true);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(271);
+                this.setTooltip("Drone yerinde bekler");
+            }
+        };
+        
+        Blockly.Blocks['drone_speed'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("⚡ Hız:")
+                    .appendField(new Blockly.FieldDropdown([
+                        ["Yavaş", "SLOW"], 
+                        ["Normal", "NORMAL"], 
+                        ["Hızlı", "FAST"]
+                    ]), "SPEED");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(22);
+                this.setTooltip("Drone hızını ayarlar");
+            }
+        };
+        
+        Blockly.Blocks['drone_led'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("💡 LED:")
+                    .appendField(new Blockly.FieldDropdown([
+                        ["Kırmızı", "RED"], 
+                        ["Yeşil", "GREEN"], 
+                        ["Mavi", "BLUE"],
+                        ["Sarı", "YELLOW"],
+                        ["Mor", "PURPLE"],
+                        ["Camgöbeği", "CYAN"]
+                    ]), "COLOR");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(22);
+                this.setTooltip("Drone LED rengini değiştirir");
+            }
+        };
+        
+        Blockly.Blocks['drone_wait'] = {
+            init: function() {
+                this.appendValueInput("TIME")
+                    .setCheck("Number")
+                    .appendField("⏱️ Bekle");
+                this.appendDummyInput().appendField("saniye");
+                this.setInputsInline(true);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(22);
+                this.setTooltip("Belirtilen süre bekler");
+            }
+        };
 
         // JAVASCRIPT GENERATOR KAYDI
         if (typeof Blockly.JavaScript !== 'undefined') {
@@ -330,6 +516,42 @@
                 var dir = block.getFieldValue('DIR');
                 return "addCmd('turn', 90, '" + dir + "');\n";
             };
+            
+            Blockly.JavaScript['drone_turn_angle'] = function(block) {
+                var angle = Blockly.JavaScript.valueToCode(block, 'ANGLE', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                var dir = block.getFieldValue('DIR');
+                return "addCmd('turn', " + angle + ", '" + dir + "');\n";
+            };
+            
+            Blockly.JavaScript['drone_flip'] = function(block) {
+                var dir = block.getFieldValue('DIR');
+                return "addCmd('flip', 0, '" + dir + "');\n";
+            };
+            
+            Blockly.JavaScript['drone_circle'] = function(block) {
+                var radius = Blockly.JavaScript.valueToCode(block, 'RADIUS', Blockly.JavaScript.ORDER_ATOMIC) || '3';
+                return "addCmd('circle', " + radius + ");\n";
+            };
+            
+            Blockly.JavaScript['drone_hover'] = function(block) {
+                var time = Blockly.JavaScript.valueToCode(block, 'TIME', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                return "addCmd('hover', " + time + ");\n";
+            };
+            
+            Blockly.JavaScript['drone_speed'] = function(block) {
+                var speed = block.getFieldValue('SPEED');
+                return "addCmd('speed', 0, '" + speed + "');\n";
+            };
+            
+            Blockly.JavaScript['drone_led'] = function(block) {
+                var color = block.getFieldValue('COLOR');
+                return "addCmd('led', 0, '" + color + "');\n";
+            };
+            
+            Blockly.JavaScript['drone_wait'] = function(block) {
+                var time = Blockly.JavaScript.valueToCode(block, 'TIME', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                return "addCmd('wait', " + time + ");\n";
+            };
         }
 
         // Workspace Başlatma
@@ -342,9 +564,25 @@
         // SİMÜLASYON MANTIĞI
         let cmdQueue = []; let isRunning = false; let busy = false;
         let targetPos = new THREE.Vector3(); let targetYaw = 0;
-        const SPEED = 0.12; const ROT_SPEED = 0.06;
+        let speedMultiplier = 1;
+        let droneSpeedMult = 1;
+        let droneColor = 0x00ffff;
+        let circleProgress = 0;
+        let circleCenter = new THREE.Vector3();
+        let circleRadius = 0;
+        let waitTimer = 0;
+        const BASE_SPEED = 0.12;
+        const BASE_ROT_SPEED = 0.06;
 
-        function addCmd(t, v, e) { cmdQueue.push({t, v:parseFloat(v), e}); }
+        function addCmd(t, v, e) { cmdQueue.push({t, v:parseFloat(v)||0, e}); }
+        
+        // Hız slider kontrolü
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        speedSlider.addEventListener('input', function() {
+            speedMultiplier = parseFloat(this.value);
+            speedValue.innerText = speedMultiplier + 'x';
+        });
 
         function runCode() {
             if(isRunning) return;
@@ -385,6 +623,14 @@
             isRunning = false; busy = false; cmdQueue = [];
             droneGroup.position.set(0,0,0); droneGroup.rotation.set(0,0,0);
             targetPos.set(0,0,0); targetYaw = 0;
+            droneSpeedMult = 1;
+            droneColor = 0x00ffff;
+            circleProgress = 0;
+            waitTimer = 0;
+            if(droneLED) {
+                droneLED.material.color.setHex(0x00ffff);
+                droneLED.material.emissive.setHex(0x00ffff);
+            }
             rings.forEach(r => { r.passed = false; r.mesh.material.color.setHex(0xffd700); });
             updateUI();
             if(full) setStatus("Hazır", "#00ff00");
@@ -394,21 +640,72 @@
             const s = document.getElementById('drone-status'); s.innerText = txt; s.style.color = col;
         }
 
+        let currentCmd = null;
+        
         function updateLogic() {
             if(!isRunning) return;
-            if(!busy && cmdQueue.length > 0) processCmd(cmdQueue.shift());
-            else if(!busy && cmdQueue.length === 0) { isRunning = false; setStatus("Bitti", "#00ff00"); }
+            
+            if(!busy && cmdQueue.length > 0) {
+                currentCmd = cmdQueue.shift();
+                processCmd(currentCmd);
+            } 
+            else if(!busy && cmdQueue.length === 0) { 
+                isRunning = false; 
+                setStatus("Bitti", "#00ff00"); 
+                currentCmd = null;
+            }
 
             if(busy) {
                 let done = false;
-                if(targetPos.distanceTo(droneGroup.position) > 0.1) {
-                    droneGroup.position.add(new THREE.Vector3().subVectors(targetPos, droneGroup.position).normalize().multiplyScalar(SPEED));
-                } else if(Math.abs(targetYaw - droneGroup.rotation.y) > 0.05) {
-                    droneGroup.rotation.y += Math.sign(targetYaw - droneGroup.rotation.y) * ROT_SPEED;
-                } else {
-                    droneGroup.position.copy(targetPos); droneGroup.rotation.y = targetYaw; done = true;
+                const speed = BASE_SPEED * speedMultiplier * droneSpeedMult;
+                const rotSpeed = BASE_ROT_SPEED * speedMultiplier * droneSpeedMult;
+                
+                // Bekleme kontrolü
+                if(waitTimer > 0) {
+                    waitTimer--;
+                    if(waitTimer <= 0) done = true;
                 }
-                if(done) busy = false;
+                // Takla animasyonu
+                else if(currentCmd && currentCmd.isFlipping) {
+                    currentCmd.flipPhase += 0.1 * speedMultiplier;
+                    droneGroup.rotation.z = Math.sin(currentCmd.flipPhase * Math.PI) * Math.PI;
+                    if(currentCmd.flipPhase >= 1) {
+                        droneGroup.rotation.z = 0;
+                        done = true;
+                    }
+                }
+                // Daire çizme
+                else if(currentCmd && currentCmd.isCircling) {
+                    circleProgress += 0.02 * speedMultiplier;
+                    const angle = circleProgress * Math.PI * 2;
+                    targetPos.x = circleCenter.x + Math.cos(angle) * circleRadius;
+                    targetPos.z = circleCenter.z + Math.sin(angle) * circleRadius;
+                    targetPos.y = droneGroup.position.y;
+                    droneGroup.position.copy(targetPos);
+                    droneGroup.rotation.y = angle + Math.PI/2;
+                    if(circleProgress >= 1) done = true;
+                }
+                // Normal hareket
+                else if(targetPos.distanceTo(droneGroup.position) > 0.1) {
+                    droneGroup.position.add(new THREE.Vector3().subVectors(targetPos, droneGroup.position).normalize().multiplyScalar(speed));
+                } 
+                else if(Math.abs(targetYaw - droneGroup.rotation.y) > 0.05) {
+                    droneGroup.rotation.y += Math.sign(targetYaw - droneGroup.rotation.y) * rotSpeed;
+                } 
+                else {
+                    droneGroup.position.copy(targetPos); 
+                    droneGroup.rotation.y = targetYaw; 
+                    done = true;
+                }
+                
+                if(done) {
+                    busy = false;
+                    if(currentCmd) {
+                        currentCmd.isFlipping = false;
+                        currentCmd.isCircling = false;
+                    }
+                    currentCmd = null;
+                }
             }
             checkRings(); updateUI();
         }
@@ -416,11 +713,61 @@
         function processCmd(c) {
             busy = true;
             const fwd = new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), droneGroup.rotation.y);
-            if(c.t==='takeoff') targetPos.y = 3;
-            else if(c.t==='land') targetPos.y = 0;
-            else if(c.t==='vertical') targetPos.y += (c.e==='UP'?c.v:-c.v);
-            else if(c.t==='move') targetPos.add(fwd.multiplyScalar(c.e==='FORWARD'?c.v:-c.v));
-            else if(c.t==='turn') targetYaw += (c.e==='LEFT'?Math.PI/2:-Math.PI/2);
+            
+            if(c.t==='takeoff') {
+                targetPos.y = 3;
+            }
+            else if(c.t==='land') {
+                targetPos.y = 0;
+            }
+            else if(c.t==='vertical') {
+                targetPos.y += (c.e==='UP'?c.v:-c.v);
+            }
+            else if(c.t==='move') {
+                targetPos.add(fwd.multiplyScalar(c.e==='FORWARD'?c.v:-c.v));
+            }
+            else if(c.t==='turn') {
+                const angle = (c.v * Math.PI) / 180;
+                targetYaw += (c.e==='LEFT'?angle:-angle);
+            }
+            else if(c.t==='flip') {
+                // Takla animasyonu için özel işlem
+                targetPos.copy(droneGroup.position);
+                c.flipPhase = 0;
+                c.isFlipping = true;
+            }
+            else if(c.t==='circle') {
+                // Daire çizmek için
+                circleCenter.copy(droneGroup.position);
+                circleRadius = c.v;
+                circleProgress = 0;
+                c.isCircling = true;
+            }
+            else if(c.t==='hover' || c.t==='wait') {
+                // Bekle
+                waitTimer = c.v * 60; // Frame cinsinden
+                targetPos.copy(droneGroup.position);
+            }
+            else if(c.t==='speed') {
+                // Hız ayarı
+                if(c.e==='SLOW') droneSpeedMult = 0.5;
+                else if(c.e==='NORMAL') droneSpeedMult = 1;
+                else if(c.e==='FAST') droneSpeedMult = 2;
+                busy = false; // Anında işlenir
+            }
+            else if(c.t==='led') {
+                // LED renk değişimi
+                const colors = {
+                    RED: 0xff0000, GREEN: 0x00ff00, BLUE: 0x0000ff,
+                    YELLOW: 0xffff00, PURPLE: 0xff00ff, CYAN: 0x00ffff
+                };
+                droneColor = colors[c.e] || 0x00ffff;
+                if(droneLED) {
+                    droneLED.material.color.setHex(droneColor);
+                    droneLED.material.emissive.setHex(droneColor);
+                }
+                busy = false; // Anında işlenir
+            }
         }
 
         function checkRings() {
