@@ -21,7 +21,7 @@ Web tabanlı, mobil uyumlu drone programlama simülasyonu. Blockly ile sürükle
 
 ## 🎯 Drone Komutları
 
-### ✈️ Temel Hareket
+### ✈️ Hareket
 | Blok | Açıklama |
 |------|----------|
 | 🚀 Kalkış Yap | Drone'u 3m yüksekliğe kaldırır |
@@ -30,13 +30,6 @@ Web tabanlı, mobil uyumlu drone programlama simülasyonu. Blockly ile sürükle
 | Yüksel/Alçal X m | Drone'u dikey hareket ettirir |
 | Sola/Sağa Dön (90°) | Drone'u 90° döndürür |
 | Sola/Sağa Dön X° | Drone'u özel açı kadar döndürür |
-
-### 🎪 İleri Hareket
-| Blok | Açıklama |
-|------|----------|
-| 🤸 Takla | Drone 4 yönde takla atar (İleri/Geri/Sol/Sağ) |
-| ⭕ Daire Çiz | Drone belirtilen yarıçapta daire çizer |
-| ⏸️ Havada Dur | Drone yerinde X saniye bekler |
 
 ### ⚙️ Ayarlar
 | Blok | Açıklama |

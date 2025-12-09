@@ -44,7 +44,9 @@
             #simulation-area { width: 60%; }
             .btn { padding: 6px 12px !important; font-size: 11px !important; }
             #controls { bottom: 10px !important; right: 10px !important; gap: 5px !important;}
-            #status-panel { font-size: 11px !important; padding: 6px !important; top: 5px !important; left: 5px !important; }
+            #logo { font-size: 12px !important; padding: 5px 10px !important; top: 5px !important; left: 5px !important; }
+            #logo .icon { font-size: 14px !important; }
+            #status-panel { font-size: 10px !important; padding: 5px !important; top: 40px !important; left: 5px !important; }
             #speed-control { padding: 6px 10px !important; font-size: 10px !important; }
             #speed-slider { width: 70px !important; }
         }
@@ -89,9 +91,23 @@
             min-width: 35px; text-align: center;
         }
         
+        /* LOGO */
+        #logo {
+            position: absolute; top: 10px; left: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 8px 16px; border-radius: 8px;
+            font-size: 16px; font-weight: bold; letter-spacing: 1px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            pointer-events: none; user-select: none;
+            display: flex; align-items: center; gap: 8px;
+        }
+        #logo .icon {
+            font-size: 20px;
+        }
+        
         /* BİLGİ PANELİ */
         #status-panel {
-            position: absolute; top: 10px; left: 10px;
+            position: absolute; top: 60px; left: 10px;
             background: rgba(0, 0, 0, 0.7); color: white;
             padding: 10px; border-radius: 8px; font-size: 13px;
             pointer-events: none; user-select: none;
@@ -122,10 +138,14 @@
             <div id="blocklyDiv"></div>
         </div>
         <div id="simulation-area">
+            <div id="logo">
+                <span class="icon">🚁</span>
+                <span>TT.ROBOTICS</span>
+            </div>
             <div id="status-panel">
                 <div>Durum: <span id="drone-status" style="color:#00ff00">Hazır</span></div>
                 <div>Yükseklik: <span id="drone-alt">0.0</span>m</div>
-                <div>Hedefler: <span id="mission-count">2</span></div>
+                <div>Hedefler: <span id="mission-count">3</span></div>
             </div>
             <div id="controls">
                 <div id="button-row">
@@ -142,7 +162,7 @@
     </div>
 
     <xml id="toolbox" style="display: none">
-        <category name="✈️ Temel Hareket" colour="#3498db">
+        <category name="✈️ Hareket" colour="#3498db">
             <block type="drone_takeoff"></block>
             <block type="drone_land"></block>
             <block type="drone_move">
@@ -168,25 +188,6 @@
                 <value name="ANGLE">
                     <shadow type="math_number">
                         <field name="NUM">45</field>
-                    </shadow>
-                </value>
-            </block>
-        </category>
-        <category name="🎪 İleri Hareket" colour="#9b59b6">
-            <block type="drone_flip">
-                <field name="DIR">FORWARD</field>
-            </block>
-            <block type="drone_circle">
-                <value name="RADIUS">
-                    <shadow type="math_number">
-                        <field name="NUM">3</field>
-                    </shadow>
-                </value>
-            </block>
-            <block type="drone_hover">
-                <value name="TIME">
-                    <shadow type="math_number">
-                        <field name="NUM">2</field>
                     </shadow>
                 </value>
             </block>
@@ -221,7 +222,7 @@
         // THREE.JS KURULUMU
         const container = document.getElementById('simulation-area');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0x87CEEB, 25, 120);
+        scene.fog = new THREE.Fog(0x87CEEB, 50, 250);
 
         const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -234,21 +235,25 @@
         const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
         scene.add(hemiLight);
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(30, 50, 20);
+        dirLight.position.set(50, 80, 40);
         dirLight.castShadow = true;
+        dirLight.shadow.camera.left = -100;
+        dirLight.shadow.camera.right = 100;
+        dirLight.shadow.camera.top = 100;
+        dirLight.shadow.camera.bottom = -100;
         scene.add(dirLight);
 
         // Zemin
         const ground = new THREE.Mesh(
-            new THREE.PlaneGeometry(200, 200),
+            new THREE.PlaneGeometry(400, 400),
             new THREE.MeshPhongMaterial({ color: 0x5c8f5e, depthWrite: false })
         );
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
         scene.add(ground);
 
-        const grid = new THREE.GridHelper(200, 40, 0x000000, 0x000000);
-        grid.material.opacity = 0.1;
+        const grid = new THREE.GridHelper(400, 80, 0x000000, 0x000000);
+        grid.material.opacity = 0.15;
         grid.material.transparent = true;
         scene.add(grid);
 
@@ -303,7 +308,47 @@
         }
         createAdvancedDrone();
 
-        const cameraOffset = new THREE.Vector3(-6, 4, 0);
+        const cameraOffset = new THREE.Vector3(-10, 6, 0);
+
+        // Harita Dekorasyonları - Drone Görünümleri
+        function createDroneDecoration(x, z, color) {
+            const group = new THREE.Group();
+            
+            // Gövde
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(0.3, 0.1, 0.3),
+                new THREE.MeshPhongMaterial({ color: color })
+            );
+            group.add(body);
+            
+            // Kollar ve pervazlar
+            const armPositions = [[0.4, 0.4], [0.4, -0.4], [-0.4, 0.4], [-0.4, -0.4]];
+            armPositions.forEach(pos => {
+                const arm = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.4, 0.02, 0.02),
+                    new THREE.MeshPhongMaterial({ color: 0x333333 })
+                );
+                arm.position.set(pos[0]/2, 0, pos[1]/2);
+                arm.rotation.y = Math.atan2(pos[1], pos[0]);
+                group.add(arm);
+                
+                const prop = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.15, 0.15, 0.01, 8),
+                    new THREE.MeshPhongMaterial({ color: 0x666666 })
+                );
+                prop.position.set(pos[0], 0.05, pos[1]);
+                group.add(prop);
+            });
+            
+            group.position.set(x, 0.1, z);
+            scene.add(group);
+        }
+        
+        // Haritaya drone dekorasyonları yerleştir
+        createDroneDecoration(-20, -20, 0x999999);
+        createDroneDecoration(25, -25, 0x777777);
+        createDroneDecoration(-30, 30, 0x888888);
+        createDroneDecoration(35, 35, 0x666666);
 
         // Hedefler
         const rings = [];
@@ -317,8 +362,9 @@
             scene.add(ring);
             rings.push({ mesh: ring, passed: false });
         }
-        createRing(8, 3, 0);
-        createRing(16, 4, 4);
+        createRing(12, 3, 0);
+        createRing(24, 4, 8);
+        createRing(36, 5, -12);
 
         // BLOCKLY BLOK TANIMLARI
         Blockly.Blocks['drone_takeoff'] = {
@@ -393,51 +439,6 @@
                 this.setNextStatement(true, null);
                 this.setColour(290);
                 this.setTooltip("Drone'u belirtilen açı kadar döndürür");
-            }
-        };
-        
-        Blockly.Blocks['drone_flip'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("🤸 Takla")
-                    .appendField(new Blockly.FieldDropdown([
-                        ["İleri", "FORWARD"], 
-                        ["Geri", "BACK"], 
-                        ["Sol", "LEFT"], 
-                        ["Sağ", "RIGHT"]
-                    ]), "DIR");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour(271);
-                this.setTooltip("Drone takla atar");
-            }
-        };
-        
-        Blockly.Blocks['drone_circle'] = {
-            init: function() {
-                this.appendValueInput("RADIUS")
-                    .setCheck("Number")
-                    .appendField("⭕ Daire Çiz (yarıçap:");
-                this.appendDummyInput().appendField("m)");
-                this.setInputsInline(true);
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour(271);
-                this.setTooltip("Drone daire şeklinde uçar");
-            }
-        };
-        
-        Blockly.Blocks['drone_hover'] = {
-            init: function() {
-                this.appendValueInput("TIME")
-                    .setCheck("Number")
-                    .appendField("⏸️ Havada Dur");
-                this.appendDummyInput().appendField("saniye");
-                this.setInputsInline(true);
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour(271);
-                this.setTooltip("Drone yerinde bekler");
             }
         };
         
@@ -523,21 +524,6 @@
                 return "addCmd('turn', " + angle + ", '" + dir + "');\n";
             };
             
-            Blockly.JavaScript['drone_flip'] = function(block) {
-                var dir = block.getFieldValue('DIR');
-                return "addCmd('flip', 0, '" + dir + "');\n";
-            };
-            
-            Blockly.JavaScript['drone_circle'] = function(block) {
-                var radius = Blockly.JavaScript.valueToCode(block, 'RADIUS', Blockly.JavaScript.ORDER_ATOMIC) || '3';
-                return "addCmd('circle', " + radius + ");\n";
-            };
-            
-            Blockly.JavaScript['drone_hover'] = function(block) {
-                var time = Blockly.JavaScript.valueToCode(block, 'TIME', Blockly.JavaScript.ORDER_ATOMIC) || '1';
-                return "addCmd('hover', " + time + ");\n";
-            };
-            
             Blockly.JavaScript['drone_speed'] = function(block) {
                 var speed = block.getFieldValue('SPEED');
                 return "addCmd('speed', 0, '" + speed + "');\n";
@@ -567,9 +553,6 @@
         let speedMultiplier = 1;
         let droneSpeedMult = 1;
         let droneColor = 0x00ffff;
-        let circleProgress = 0;
-        let circleCenter = new THREE.Vector3();
-        let circleRadius = 0;
         let waitTimer = 0;
         const BASE_SPEED = 0.12;
         const BASE_ROT_SPEED = 0.06;
@@ -625,7 +608,6 @@
             targetPos.set(0,0,0); targetYaw = 0;
             droneSpeedMult = 1;
             droneColor = 0x00ffff;
-            circleProgress = 0;
             waitTimer = 0;
             if(droneLED) {
                 droneLED.material.color.setHex(0x00ffff);
@@ -665,26 +647,6 @@
                     waitTimer--;
                     if(waitTimer <= 0) done = true;
                 }
-                // Takla animasyonu
-                else if(currentCmd && currentCmd.isFlipping) {
-                    currentCmd.flipPhase += 0.1 * speedMultiplier;
-                    droneGroup.rotation.z = Math.sin(currentCmd.flipPhase * Math.PI) * Math.PI;
-                    if(currentCmd.flipPhase >= 1) {
-                        droneGroup.rotation.z = 0;
-                        done = true;
-                    }
-                }
-                // Daire çizme
-                else if(currentCmd && currentCmd.isCircling) {
-                    circleProgress += 0.02 * speedMultiplier;
-                    const angle = circleProgress * Math.PI * 2;
-                    targetPos.x = circleCenter.x + Math.cos(angle) * circleRadius;
-                    targetPos.z = circleCenter.z + Math.sin(angle) * circleRadius;
-                    targetPos.y = droneGroup.position.y;
-                    droneGroup.position.copy(targetPos);
-                    droneGroup.rotation.y = angle + Math.PI/2;
-                    if(circleProgress >= 1) done = true;
-                }
                 // Normal hareket
                 else if(targetPos.distanceTo(droneGroup.position) > 0.1) {
                     droneGroup.position.add(new THREE.Vector3().subVectors(targetPos, droneGroup.position).normalize().multiplyScalar(speed));
@@ -700,10 +662,6 @@
                 
                 if(done) {
                     busy = false;
-                    if(currentCmd) {
-                        currentCmd.isFlipping = false;
-                        currentCmd.isCircling = false;
-                    }
                     currentCmd = null;
                 }
             }
@@ -730,20 +688,7 @@
                 const angle = (c.v * Math.PI) / 180;
                 targetYaw += (c.e==='LEFT'?angle:-angle);
             }
-            else if(c.t==='flip') {
-                // Takla animasyonu için özel işlem
-                targetPos.copy(droneGroup.position);
-                c.flipPhase = 0;
-                c.isFlipping = true;
-            }
-            else if(c.t==='circle') {
-                // Daire çizmek için
-                circleCenter.copy(droneGroup.position);
-                circleRadius = c.v;
-                circleProgress = 0;
-                c.isCircling = true;
-            }
-            else if(c.t==='hover' || c.t==='wait') {
+            else if(c.t==='wait') {
                 // Bekle
                 waitTimer = c.v * 60; // Frame cinsinden
                 targetPos.copy(droneGroup.position);
