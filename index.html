@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drone Blocks - Mobil Simülasyon</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script src="https://unpkg.com/blockly/blockly_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/msg/tr.js"></script>
+    
+    <style>
+        /* --- GENEL & MOBİL AYARLAR --- */
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #1a1a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* DİKEY EKRAN UYARISI */
+        #orientation-lock {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2c3e50; z-index: 9999;
+            color: white; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        #orientation-lock svg { width: 60px; height: 60px; margin-bottom: 20px; animation: rotatePhone 2s infinite; }
+        
+        @media screen and (orientation: portrait) {
+            #orientation-lock { display: flex; }
+            #main-app { display: none; }
+        }
+
+        /* ANA DÜZEN */
+        #main-app { display: flex; width: 100vw; height: 100vh; }
+        
+        #blockly-area { width: 45%; height: 100%; position: relative; border-right: 3px solid #333; }
+        #simulation-area { width: 55%; height: 100%; position: relative; background: linear-gradient(to bottom, #87CEEB, #E0F7FA); }
+        #blocklyDiv { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+
+        /* KÜÇÜK EKRAN OPTİMİZASYONU */
+        @media screen and (max-height: 480px) {
+            #blockly-area { width: 40%; }
+            #simulation-area { width: 60%; }
+            .btn { padding: 6px 12px !important; font-size: 11px !important; }
+            #controls { bottom: 10px !important; right: 10px !important; gap: 5px !important;}
+            #status-panel { font-size: 11px !important; padding: 6px !important; top: 5px !important; left: 5px !important; }
+        }
+
+        /* KONTROL PANELİ */
+        #controls {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; gap: 10px; z-index: 100;
+        }
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 50px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.3); transition: transform 0.1s; white-space: nowrap;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-run { background: #27ae60; color: white; }
+        .btn-reset { background: #c0392b; color: white; }
+        
+        /* BİLGİ PANELİ */
+        #status-panel {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(0, 0, 0, 0.7); color: white;
+            padding: 10px; border-radius: 8px; font-size: 13px;
+            pointer-events: none; user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        #status-panel div { margin-bottom: 4px; }
+
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+            100% { transform: rotate(0deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="orientation-lock">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <path d="M12 18h.01"></path>
+        </svg>
+        <h3>Lütfen Telefonu Yan Çevirin</h3>
+        <p style="font-size: 12px;">Bu simülasyon yatay ekran gerektirir.</p>
+    </div>
+
+    <div id="main-app">
+        <div id="blockly-area">
+            <div id="blocklyDiv"></div>
+        </div>
+        <div id="simulation-area">
+            <div id="status-panel">
+                <div>Durum: <span id="drone-status" style="color:#00ff00">Hazır</span></div>
+                <div>Yükseklik: <span id="drone-alt">0.0</span>m</div>
+                <div>Hedefler: <span id="mission-count">2</span></div>
+            </div>
+            <div id="controls">
+                <button class="btn btn-run" onclick="runCode()">▶ ÇALIŞTIR</button>
+                <button class="btn btn-reset" onclick="resetApp()">↺ SIFIRLA</button>
+            </div>
+        </div>
+    </div>
+
+    <xml id="toolbox" style="display: none">
+        <category name="Hareket" colour="#3498db">
+            <block type="drone_takeoff"></block>
+            <block type="drone_land"></block>
+            <block type="drone_move">
+                <field name="DIR">FORWARD</field>
+                <value name="DIST">
+                    <shadow type="math_number">
+                        <field name="NUM">3</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="drone_updown">
+                <field name="DIR">UP</field>
+                <value name="DIST">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="drone_turn">
+                <field name="DIR">LEFT</field>
+            </block>
+        </category>
+        <category name="Döngü" colour="#e67e22">
+            <block type="controls_repeat_ext">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+    </xml>
+
+    <script>
+        // THREE.JS KURULUMU
+        const container = document.getElementById('simulation-area');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x87CEEB, 25, 120);
+
+        const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // Işıklar
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+        scene.add(hemiLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(30, 50, 20);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        // Zemin
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(200, 200),
+            new THREE.MeshPhongMaterial({ color: 0x5c8f5e, depthWrite: false })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        const grid = new THREE.GridHelper(200, 40, 0x000000, 0x000000);
+        grid.material.opacity = 0.1;
+        grid.material.transparent = true;
+        scene.add(grid);
+
+        // DRONE MODELİ
+        const droneGroup = new THREE.Group();
+        const rotors = [];
+
+        function createAdvancedDrone() {
+            const darkMat = new THREE.MeshPhongMaterial({ color: 0x2a2a2a });
+            const orangeMat = new THREE.MeshPhongMaterial({ color: 0xff5722 }); 
+            const silverMat = new THREE.MeshPhongMaterial({ color: 0x999999 });
+
+            // Merkezi Gövde
+            const bodyHub = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.15, 16), darkMat);
+            droneGroup.add(bodyHub);
+
+            // Göz
+            const camEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshPhongMaterial({color: 0x00ffff}));
+            camEye.position.set(0.35, 0.1, 0);
+            droneGroup.add(camEye);
+
+            // Kollar
+            const armConfigs = [[0.8, 0.8, true], [0.8, -0.8, true], [-0.8, 0.8, false], [-0.8, -0.8, false]];
+
+            armConfigs.forEach(config => {
+                const x = config[0], z = config[1], isFront = config[2];
+                const armMat = isFront ? orangeMat : darkMat;
+
+                const armLen = Math.sqrt(x*x + z*z);
+                const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, armLen, 8), armMat);
+                arm.position.set(x/2, 0, z/2);
+                arm.rotation.x = Math.PI/2;
+                arm.rotation.z = Math.atan2(z, x) + Math.PI/2;
+                droneGroup.add(arm);
+
+                const guard = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.02, 16, 32), darkMat);
+                guard.position.set(x, 0.05, z);
+                guard.rotation.x = Math.PI/2;
+                droneGroup.add(guard);
+
+                const propGeo = new THREE.BoxGeometry(0.9, 0.01, 0.08);
+                propGeo.translate(0, 0.15, 0);
+                const prop = new THREE.Mesh(propGeo, new THREE.MeshPhongMaterial({color: isFront ? 0xeeeeee : 0xcccccc}));
+                prop.position.set(x, 0, z);
+                droneGroup.add(prop);
+                rotors.push(prop);
+            });
+
+            droneGroup.traverse(c => { if(c.isMesh) c.castShadow = true; });
+            scene.add(droneGroup);
+        }
+        createAdvancedDrone();
+
+        const cameraOffset = new THREE.Vector3(-6, 4, 0);
+
+        // Hedefler
+        const rings = [];
+        function createRing(x, y, z) {
+            const geometry = new THREE.TorusGeometry(1.2, 0.15, 16, 100);
+            const material = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+            const ring = new THREE.Mesh(geometry, material);
+            ring.rotation.y = Math.PI / 2;
+            ring.position.set(x, y, z);
+            ring.castShadow = true;
+            scene.add(ring);
+            rings.push({ mesh: ring, passed: false });
+        }
+        createRing(8, 3, 0);
+        createRing(16, 4, 4);
+
+        // BLOCKLY AYARLARI
+        Blockly.defineBlocksWithJsonArray([
+            {"type": "drone_takeoff", "message0": "🚀 Kalkış Yap", "previousStatement": null, "nextStatement": null, "colour": 160},
+            {"type": "drone_land", "message0": "🛬 İniş Yap", "previousStatement": null, "nextStatement": null, "colour": 160},
+            {"type": "drone_move", "message0": "%1 %2 m", "args0": [{"type": "field_dropdown", "name": "DIR", "options": [["İleri", "FORWARD"], ["Geri", "BACK"]]}, {"type": "input_value", "name": "DIST", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230},
+            {"type": "drone_updown", "message0": "%1 %2 m", "args0": [{"type": "field_dropdown", "name": "DIR", "options": [["Yüksel", "UP"], ["Alçal", "DOWN"]]}, {"type": "input_value", "name": "DIST", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230},
+            {"type": "drone_turn", "message0": "%1 Dön (90°)", "args0": [{"type": "field_dropdown", "name": "DIR", "options": [["Sola", "LEFT"], ["Sağa", "RIGHT"]]}], "previousStatement": null, "nextStatement": null, "colour": 290}
+        ]);
+
+        // Generator Fonksiyonları
+        Blockly.JavaScript['drone_takeoff'] = function(block) { return "addCmd('takeoff',0);\n"; };
+        Blockly.JavaScript['drone_land'] = function(block) { return "addCmd('land',0);\n"; };
+        Blockly.JavaScript['drone_move'] = function(block) { 
+            var dist = Blockly.JavaScript.valueToCode(block, 'DIST', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+            return "addCmd('move', " + dist + ", '" + block.getFieldValue('DIR') + "');\n";
+        };
+        Blockly.JavaScript['drone_updown'] = function(block) {
+            var dist = Blockly.JavaScript.valueToCode(block, 'DIST', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+            return "addCmd('vertical', " + dist + ", '" + block.getFieldValue('DIR') + "');\n";
+        };
+        Blockly.JavaScript['drone_turn'] = function(block) {
+            return "addCmd('turn', 90, '" + block.getFieldValue('DIR') + "');\n";
+        };
+
+        // Workspace Başlatma
+        var workspace = Blockly.inject('blocklyDiv', {
+            toolbox: document.getElementById('toolbox'),
+            scrollbars: true, 
+            zoom: { controls: true, wheel: true, startScale: 0.8, maxScale: 2, minScale: 0.5 }
+        });
+
+        // SİMÜLASYON MANTIĞI
+        let cmdQueue = []; let isRunning = false; let busy = false;
+        let targetPos = new THREE.Vector3(); let targetYaw = 0;
+        const SPEED = 0.12; const ROT_SPEED = 0.06;
+
+        function addCmd(t, v, e) { cmdQueue.push({t, v:parseFloat(v), e}); }
+
+        function runCode() {
+            if(isRunning) return;
+            resetApp(false); isRunning = true;
+            setStatus("Çalışıyor...", "yellow");
+            
+            Blockly.JavaScript.addReservedWords('code');
+            try { 
+                var code = Blockly.JavaScript.workspaceToCode(workspace);
+                eval(code); 
+            } catch(e) { 
+                console.error(e);
+                alert("Kod Hatası: " + e); 
+                resetApp(); 
+            }
+        }
+
+        function resetApp(full=true) {
+            isRunning = false; busy = false; cmdQueue = [];
+            droneGroup.position.set(0,0,0); droneGroup.rotation.set(0,0,0);
+            targetPos.set(0,0,0); targetYaw = 0;
+            rings.forEach(r => { r.passed = false; r.mesh.material.color.setHex(0xffd700); });
+            updateUI();
+            if(full) setStatus("Hazır", "#00ff00");
+        }
+
+        function setStatus(txt, col) {
+            const s = document.getElementById('drone-status'); s.innerText = txt; s.style.color = col;
+        }
+
+        function updateLogic() {
+            if(!isRunning) return;
+            if(!busy && cmdQueue.length > 0) processCmd(cmdQueue.shift());
+            else if(!busy && cmdQueue.length === 0) { isRunning = false; setStatus("Bitti", "#00ff00"); }
+
+            if(busy) {
+                let done = false;
+                if(targetPos.distanceTo(droneGroup.position) > 0.1) {
+                    droneGroup.position.add(new THREE.Vector3().subVectors(targetPos, droneGroup.position).normalize().multiplyScalar(SPEED));
+                } else if(Math.abs(targetYaw - droneGroup.rotation.y) > 0.05) {
+                    droneGroup.rotation.y += Math.sign(targetYaw - droneGroup.rotation.y) * ROT_SPEED;
+                } else {
+                    droneGroup.position.copy(targetPos); droneGroup.rotation.y = targetYaw; done = true;
+                }
+                if(done) busy = false;
+            }
+            checkRings(); updateUI();
+        }
+
+        function processCmd(c) {
+            busy = true;
+            const fwd = new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), droneGroup.rotation.y);
+            if(c.t==='takeoff') targetPos.y = 3;
+            else if(c.t==='land') targetPos.y = 0;
+            else if(c.t==='vertical') targetPos.y += (c.e==='UP'?c.v:-c.v);
+            else if(c.t==='move') targetPos.add(fwd.multiplyScalar(c.e==='FORWARD'?c.v:-c.v));
+            else if(c.t==='turn') targetYaw += (c.e==='LEFT'?Math.PI/2:-Math.PI/2);
+        }
+
+        function checkRings() {
+            rings.forEach(r => {
+                if(!r.passed && droneGroup.position.distanceTo(r.mesh.position) < 1.3) {
+                    r.passed = true; r.mesh.material.color.setHex(0x00ff00);
+                }
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('drone-alt').innerText = droneGroup.position.y.toFixed(1);
+            document.getElementById('mission-count').innerText = rings.filter(r=>!r.passed).length;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            updateLogic();
+            if(droneGroup.position.y > 0.1 || busy) rotors.forEach((r,i) => r.rotation.y += 0.6 * (i%2===0?1:-1));
+            
+            const camDest = droneGroup.position.clone().add(cameraOffset.clone().applyAxisAngle(new THREE.Vector3(0,1,0), droneGroup.rotation.y));
+            camera.position.lerp(camDest, 0.05);
+            camera.lookAt(droneGroup.position.clone().add(new THREE.Vector3(0,1,0)));
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            const w = container.clientWidth, h = container.clientHeight;
+            renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix();
+            Blockly.svgResize(workspace);
+        });
+    </script>
+</body>
+</html>
