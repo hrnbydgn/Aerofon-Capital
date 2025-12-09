@@ -244,25 +244,82 @@
         createRing(16, 4, 4);
 
         // BLOCKLY AYARLARI
-        Blockly.defineBlocksWithJsonArray([
-            {"type": "drone_takeoff", "message0": "🚀 Kalkış Yap", "previousStatement": null, "nextStatement": null, "colour": 160},
-            {"type": "drone_land", "message0": "🛬 İniş Yap", "previousStatement": null, "nextStatement": null, "colour": 160},
-            {"type": "drone_move", "message0": "%1 %2 m", "args0": [{"type": "field_dropdown", "name": "DIR", "options": [["İleri", "FORWARD"], ["Geri", "BACK"]]}, {"type": "input_value", "name": "DIST", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230},
-            {"type": "drone_updown", "message0": "%1 %2 m", "args0": [{"type": "field_dropdown", "name": "DIR", "options": [["Yüksel", "UP"], ["Alçal", "DOWN"]]}, {"type": "input_value", "name": "DIST", "check": "Number"}], "previousStatement": null, "nextStatement": null, "colour": 230},
-            {"type": "drone_turn", "message0": "%1 Dön (90°)", "args0": [{"type": "field_dropdown", "name": "DIR", "options": [["Sola", "LEFT"], ["Sağa", "RIGHT"]]}], "previousStatement": null, "nextStatement": null, "colour": 290}
-        ]);
+        Blockly.Blocks['drone_takeoff'] = {
+            init: function() {
+                this.appendDummyInput().appendField("🚀 Kalkış Yap");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+            }
+        };
+        
+        Blockly.Blocks['drone_land'] = {
+            init: function() {
+                this.appendDummyInput().appendField("🛬 İniş Yap");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(160);
+            }
+        };
+        
+        Blockly.Blocks['drone_move'] = {
+            init: function() {
+                this.appendValueInput("DIST")
+                    .setCheck("Number")
+                    .appendField(new Blockly.FieldDropdown([["İleri", "FORWARD"], ["Geri", "BACK"]]), "DIR")
+                    .appendField("");
+                this.appendDummyInput().appendField("m");
+                this.setInputsInline(true);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+            }
+        };
+        
+        Blockly.Blocks['drone_updown'] = {
+            init: function() {
+                this.appendValueInput("DIST")
+                    .setCheck("Number")
+                    .appendField(new Blockly.FieldDropdown([["Yüksel", "UP"], ["Alçal", "DOWN"]]), "DIR")
+                    .appendField("");
+                this.appendDummyInput().appendField("m");
+                this.setInputsInline(true);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+            }
+        };
+        
+        Blockly.Blocks['drone_turn'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldDropdown([["Sola", "LEFT"], ["Sağa", "RIGHT"]]), "DIR")
+                    .appendField("Dön (90°)");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(290);
+            }
+        };
 
         // Generator Fonksiyonları
-        Blockly.JavaScript['drone_takeoff'] = function(block) { return "addCmd('takeoff',0);\n"; };
-        Blockly.JavaScript['drone_land'] = function(block) { return "addCmd('land',0);\n"; };
+        Blockly.JavaScript['drone_takeoff'] = function(block) { 
+            return "addCmd('takeoff',0);\n"; 
+        };
+        
+        Blockly.JavaScript['drone_land'] = function(block) { 
+            return "addCmd('land',0);\n"; 
+        };
+        
         Blockly.JavaScript['drone_move'] = function(block) { 
             var dist = Blockly.JavaScript.valueToCode(block, 'DIST', Blockly.JavaScript.ORDER_ATOMIC) || '0';
             return "addCmd('move', " + dist + ", '" + block.getFieldValue('DIR') + "');\n";
         };
+        
         Blockly.JavaScript['drone_updown'] = function(block) {
             var dist = Blockly.JavaScript.valueToCode(block, 'DIST', Blockly.JavaScript.ORDER_ATOMIC) || '0';
             return "addCmd('vertical', " + dist + ", '" + block.getFieldValue('DIR') + "');\n";
         };
+        
         Blockly.JavaScript['drone_turn'] = function(block) {
             return "addCmd('turn', 90, '" + block.getFieldValue('DIR') + "');\n";
         };
