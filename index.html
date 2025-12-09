@@ -7,10 +7,10 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <script src="https://unpkg.com/blockly/blockly_compressed.js"></script>
-    <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
-    <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
-    <script src="https://unpkg.com/blockly/msg/tr.js"></script>
+    <script src="https://unpkg.com/blockly@9.3.3/blockly_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@9.3.3/blocks_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@9.3.3/javascript_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@9.3.3/msg/tr.js"></script>
     
     <style>
         /* --- GENEL & MOBİL AYARLAR --- */
@@ -243,13 +243,14 @@
         createRing(8, 3, 0);
         createRing(16, 4, 4);
 
-        // BLOCKLY AYARLARI
+        // BLOCKLY BLOK TANIMLARI
         Blockly.Blocks['drone_takeoff'] = {
             init: function() {
                 this.appendDummyInput().appendField("🚀 Kalkış Yap");
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
                 this.setColour(160);
+                this.setTooltip("Drone'u havaya kaldırır");
             }
         };
         
@@ -259,6 +260,7 @@
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
                 this.setColour(160);
+                this.setTooltip("Drone'u yere indirir");
             }
         };
         
@@ -266,13 +268,13 @@
             init: function() {
                 this.appendValueInput("DIST")
                     .setCheck("Number")
-                    .appendField(new Blockly.FieldDropdown([["İleri", "FORWARD"], ["Geri", "BACK"]]), "DIR")
-                    .appendField("");
+                    .appendField(new Blockly.FieldDropdown([["İleri", "FORWARD"], ["Geri", "BACK"]]), "DIR");
                 this.appendDummyInput().appendField("m");
                 this.setInputsInline(true);
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
                 this.setColour(230);
+                this.setTooltip("Drone'u ileri veya geri hareket ettirir");
             }
         };
         
@@ -280,13 +282,13 @@
             init: function() {
                 this.appendValueInput("DIST")
                     .setCheck("Number")
-                    .appendField(new Blockly.FieldDropdown([["Yüksel", "UP"], ["Alçal", "DOWN"]]), "DIR")
-                    .appendField("");
+                    .appendField(new Blockly.FieldDropdown([["Yüksel", "UP"], ["Alçal", "DOWN"]]), "DIR");
                 this.appendDummyInput().appendField("m");
                 this.setInputsInline(true);
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
                 this.setColour(230);
+                this.setTooltip("Drone'u yukarı veya aşağı hareket ettirir");
             }
         };
         
@@ -298,31 +300,37 @@
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
                 this.setColour(290);
+                this.setTooltip("Drone'u 90 derece döndürür");
             }
         };
 
-        // Generator Fonksiyonları
-        Blockly.JavaScript['drone_takeoff'] = function(block) { 
-            return "addCmd('takeoff',0);\n"; 
-        };
-        
-        Blockly.JavaScript['drone_land'] = function(block) { 
-            return "addCmd('land',0);\n"; 
-        };
-        
-        Blockly.JavaScript['drone_move'] = function(block) { 
-            var dist = Blockly.JavaScript.valueToCode(block, 'DIST', Blockly.JavaScript.ORDER_ATOMIC) || '0';
-            return "addCmd('move', " + dist + ", '" + block.getFieldValue('DIR') + "');\n";
-        };
-        
-        Blockly.JavaScript['drone_updown'] = function(block) {
-            var dist = Blockly.JavaScript.valueToCode(block, 'DIST', Blockly.JavaScript.ORDER_ATOMIC) || '0';
-            return "addCmd('vertical', " + dist + ", '" + block.getFieldValue('DIR') + "');\n";
-        };
-        
-        Blockly.JavaScript['drone_turn'] = function(block) {
-            return "addCmd('turn', 90, '" + block.getFieldValue('DIR') + "');\n";
-        };
+        // JAVASCRIPT GENERATOR KAYDI
+        if (typeof Blockly.JavaScript !== 'undefined') {
+            Blockly.JavaScript['drone_takeoff'] = function(block) { 
+                return "addCmd('takeoff',0);\n"; 
+            };
+            
+            Blockly.JavaScript['drone_land'] = function(block) { 
+                return "addCmd('land',0);\n"; 
+            };
+            
+            Blockly.JavaScript['drone_move'] = function(block) { 
+                var dist = Blockly.JavaScript.valueToCode(block, 'DIST', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                var dir = block.getFieldValue('DIR');
+                return "addCmd('move', " + dist + ", '" + dir + "');\n";
+            };
+            
+            Blockly.JavaScript['drone_updown'] = function(block) {
+                var dist = Blockly.JavaScript.valueToCode(block, 'DIST', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                var dir = block.getFieldValue('DIR');
+                return "addCmd('vertical', " + dist + ", '" + dir + "');\n";
+            };
+            
+            Blockly.JavaScript['drone_turn'] = function(block) {
+                var dir = block.getFieldValue('DIR');
+                return "addCmd('turn', 90, '" + dir + "');\n";
+            };
+        }
 
         // Workspace Başlatma
         var workspace = Blockly.inject('blocklyDiv', {
@@ -340,16 +348,35 @@
 
         function runCode() {
             if(isRunning) return;
-            resetApp(false); isRunning = true;
+            resetApp(false); 
+            isRunning = true;
             setStatus("Çalışıyor...", "yellow");
             
-            Blockly.JavaScript.addReservedWords('code');
             try { 
+                if (typeof Blockly.JavaScript === 'undefined') {
+                    throw new Error('Blockly JavaScript generator yüklenemedi!');
+                }
+                
+                Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
                 var code = Blockly.JavaScript.workspaceToCode(workspace);
+                
+                console.log("Üretilen Kod:", code);
+                
+                if (!code || code.trim() === '') {
+                    alert("Lütfen önce blokları ekleyin!");
+                    resetApp();
+                    return;
+                }
+                
                 eval(code); 
+                
+                if (cmdQueue.length === 0) {
+                    alert("Komut bulunamadı! Blokları kontrol edin.");
+                    resetApp();
+                }
             } catch(e) { 
-                console.error(e);
-                alert("Kod Hatası: " + e); 
+                console.error("Hata detayı:", e);
+                alert("Kod Hatası: " + e.message); 
                 resetApp(); 
             }
         }
