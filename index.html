@@ -2,247 +2,165 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1a1a1a">
-    <title>Drone Ground Control</title>
+    <title>QGroundControl</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Orientation Warning -->
+    <div id="orientation-warning">
+        <i class="fas fa-mobile-screen fa-rotate-90 fa-5x"></i>
+        <h2>Lütfen Cihazınızı Yatay Konuma Çevirin</h2>
+        <p>Bu uygulama sadece yatay (landscape) modda çalışır</p>
+    </div>
+
     <div id="app">
-        <!-- Header Bar -->
-        <header class="header-bar">
-            <div class="header-left">
-                <div class="logo">
-                    <svg viewBox="0 0 24 24" width="32" height="32">
-                        <path fill="currentColor" d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z"/>
-                    </svg>
-                    <span>Drone GCS</span>
+        <!-- Map Container (Full or PIP) -->
+        <div id="map-container" class="view-panel mode-fullscreen">
+            <div id="map"></div>
+        </div>
+
+        <!-- Camera Container (Full or PIP) -->
+        <div id="camera-container" class="view-panel mode-pip" onclick="swapViews()">
+            <div class="live-badge">
+                <i class="fas fa-circle"></i> CANLI
+            </div>
+            <div class="camera-overlay">
+                <div class="camera-crosshair">
+                    <div class="crosshair-h"></div>
+                    <div class="crosshair-v"></div>
                 </div>
-                <div class="connection-status">
-                    <span class="status-indicator disconnected"></span>
-                    <span class="status-text">Bağlantı Bekleniyor</span>
+                <div class="camera-info">
+                    <span>1920x1080 | 30fps</span>
                 </div>
             </div>
-            <div class="header-center">
-                <div class="flight-mode-selector">
-                    <button class="mode-btn">STABILIZE</button>
-                    <button class="mode-btn">LOITER</button>
-                    <button class="mode-btn">AUTO</button>
-                    <button class="mode-btn">RTL</button>
+        </div>
+
+        <!-- Top Bar -->
+        <header class="top-bar ui-layer">
+            <div class="top-left">
+                <div class="qgc-logo">
+                    <i class="fas fa-paper-plane"></i>
                 </div>
+                <div class="vehicle-status">
+                    <div class="status-indicator" id="connectionStatus"></div>
+                    <span class="status-text" id="statusText">Hazır</span>
+                </div>
+                <div class="flight-mode" id="flightMode">STABILIZE</div>
             </div>
-            <div class="header-right">
-                <button class="header-btn" id="armBtn">
+            <div class="top-right">
+                <div class="top-info-item">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span id="signalStrength">100%</span>
+                </div>
+                <div class="top-info-item">
+                    <i class="fas fa-battery-full" id="batteryIcon"></i>
+                    <span id="batteryVoltage">16.8V</span>
+                </div>
+                <div class="top-info-item">
+                    <i class="fas fa-clock"></i>
+                    <span id="flightTime">00:00</span>
+                </div>
+                <button class="arm-btn" id="armBtn">
+                    <i class="fas fa-power-off"></i>
                     <span>ARM</span>
                 </button>
-                <button class="header-btn" id="settingsBtn">⚙️</button>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Left Panel -->
-            <div class="left-panel">
-                <!-- Telemetry Data -->
-                <div class="telemetry-panel">
-                    <div class="telemetry-item">
-                        <div class="telemetry-label">ALTITUDE</div>
-                        <div class="telemetry-value" id="altitude">0.0 m</div>
-                    </div>
-                    <div class="telemetry-item">
-                        <div class="telemetry-label">GROUNDSPEED</div>
-                        <div class="telemetry-value" id="groundspeed">0.0 m/s</div>
-                    </div>
-                    <div class="telemetry-item">
-                        <div class="telemetry-label">AIRSPEED</div>
-                        <div class="telemetry-value" id="airspeed">0.0 m/s</div>
-                    </div>
-                    <div class="telemetry-item">
-                        <div class="telemetry-label">CLIMB RATE</div>
-                        <div class="telemetry-value" id="climbrate">0.0 m/s</div>
-                    </div>
-                </div>
+        <!-- Left Toolbar -->
+        <div class="left-toolbar ui-layer">
+            <div class="toolbar-section">
+                <button class="tool-btn active" data-tool="fly">
+                    <i class="fas fa-plane"></i>
+                    <span>FLY</span>
+                </button>
+                <button class="tool-btn" data-tool="plan">
+                    <i class="fas fa-route"></i>
+                    <span>PLAN</span>
+                </button>
+                <button class="tool-btn" onclick="toggleTakeoffSlider()">
+                    <i class="fas fa-plane-departure"></i>
+                    <span>TAKEOFF</span>
+                </button>
+            </div>
+        </div>
 
-                <!-- Attitude Indicator -->
-                <div class="instrument-panel">
-                    <div class="attitude-indicator">
-                        <canvas id="attitudeCanvas" width="200" height="200"></canvas>
-                    </div>
-                    <div class="compass">
-                        <canvas id="compassCanvas" width="150" height="150"></canvas>
-                        <div class="heading-value" id="heading">0°</div>
-                    </div>
-                </div>
-
-                <!-- Battery Info -->
-                <div class="battery-panel">
-                    <div class="battery-icon">
-                        <div class="battery-level" id="batteryLevel" style="width: 100%"></div>
-                    </div>
-                    <div class="battery-info">
-                        <div class="battery-voltage" id="batteryVoltage">16.8V</div>
-                        <div class="battery-percent" id="batteryPercent">100%</div>
-                        <div class="battery-current" id="batteryCurrent">0.0A</div>
-                    </div>
-                </div>
-
-                <!-- GPS Info -->
-                <div class="gps-panel">
-                    <div class="gps-item">
-                        <span class="gps-label">GPS:</span>
-                        <span class="gps-value" id="gpsStatus">No Fix</span>
-                    </div>
-                    <div class="gps-item">
-                        <span class="gps-label">Satellites:</span>
-                        <span class="gps-value" id="gpsSats">0</span>
-                    </div>
-                    <div class="gps-item">
-                        <span class="gps-label">HDOP:</span>
-                        <span class="gps-value" id="gpsHdop">99.9</span>
-                    </div>
-                </div>
+        <!-- Right Instruments Panel -->
+        <div class="right-instruments ui-layer">
+            <!-- Attitude Indicator -->
+            <div class="instrument-widget attitude-widget">
+                <canvas id="attitudeCanvas" width="180" height="180"></canvas>
+                <div class="instrument-label">ATTITUDE</div>
             </div>
 
-            <!-- Center Panel (Map/Video) -->
-            <div class="center-panel">
-                <div class="view-tabs">
-                    <button class="view-tab active" data-view="map">HARITA</button>
-                    <button class="view-tab" data-view="video">VIDEO</button>
-                    <button class="view-tab" data-view="plan">PLAN</button>
-                </div>
-                
-                <div id="mapView" class="view-content active">
-                    <div id="map"></div>
-                    <!-- HUD Overlay -->
-                    <div class="hud-overlay">
-                        <div class="hud-center">
-                            <div class="crosshair"></div>
-                        </div>
-                        <div class="hud-info-top">
-                            <div class="hud-item">
-                                <span>LAT:</span>
-                                <span id="hudLat">0.0000000</span>
-                            </div>
-                            <div class="hud-item">
-                                <span>LON:</span>
-                                <span id="hudLon">0.0000000</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="videoView" class="view-content">
-                    <div class="video-container">
-                        <div class="video-placeholder">
-                            <svg viewBox="0 0 24 24" width="64" height="64">
-                                <path fill="currentColor" d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z"/>
-                            </svg>
-                            <p>Video Stream Bekleniyor</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="planView" class="view-content">
-                    <div class="plan-container">
-                        <div class="plan-toolbar">
-                            <button class="plan-btn">Waypoint Ekle</button>
-                            <button class="plan-btn">Görev Yükle</button>
-                            <button class="plan-btn">Görev Kaydet</button>
-                            <button class="plan-btn">Temizle</button>
-                        </div>
-                        <div id="planMap"></div>
-                    </div>
-                </div>
+            <!-- Compass -->
+            <div class="instrument-widget compass-widget">
+                <canvas id="compassCanvas" width="140" height="140"></canvas>
+                <div class="heading-display" id="headingDisplay">0°</div>
+                <div class="instrument-label">HEADING</div>
             </div>
+        </div>
 
-            <!-- Right Panel -->
-            <div class="right-panel">
-                <!-- System Status -->
-                <div class="system-status">
-                    <h3>SİSTEM DURUMU</h3>
-                    <div class="status-grid">
-                        <div class="status-item ok">
-                            <span class="status-icon">✓</span>
-                            <span>Sensors</span>
-                        </div>
-                        <div class="status-item ok">
-                            <span class="status-icon">✓</span>
-                            <span>GPS</span>
-                        </div>
-                        <div class="status-item warning">
-                            <span class="status-icon">!</span>
-                            <span>Radio</span>
-                        </div>
-                        <div class="status-item error">
-                            <span class="status-icon">✗</span>
-                            <span>Battery</span>
-                        </div>
+        <!-- Bottom Telemetry Panel -->
+        <div class="bottom-telemetry ui-layer">
+            <div class="telemetry-grid">
+                <div class="telem-item">
+                    <div class="telem-icon"><i class="fas fa-arrow-up"></i></div>
+                    <div class="telem-data">
+                        <div class="telem-label">ALTITUDE</div>
+                        <div class="telem-value" id="altitude">0.0 m</div>
                     </div>
                 </div>
-
-                <!-- Messages -->
-                <div class="messages-panel">
-                    <h3>MESAJLAR</h3>
-                    <div class="messages-list" id="messagesList">
-                        <div class="message info">Sistem başlatıldı</div>
-                        <div class="message warning">GPS sinyali zayıf</div>
-                        <div class="message error">Batarya seviyesi düşük</div>
+                <div class="telem-item">
+                    <div class="telem-icon"><i class="fas fa-gauge-high"></i></div>
+                    <div class="telem-data">
+                        <div class="telem-label">SPEED</div>
+                        <div class="telem-value" id="groundspeed">0.0 m/s</div>
                     </div>
                 </div>
-
-                <!-- Actions -->
-                <div class="actions-panel">
-                    <button class="action-btn primary">TAKEOFF</button>
-                    <button class="action-btn">LAND</button>
-                    <button class="action-btn danger">EMERGENCY STOP</button>
-                    <button class="action-btn">RETURN HOME</button>
+                <div class="telem-item">
+                    <div class="telem-icon"><i class="fas fa-arrow-trend-up"></i></div>
+                    <div class="telem-data">
+                        <div class="telem-label">CLIMB</div>
+                        <div class="telem-value" id="climbrate">0.0 m/s</div>
+                    </div>
                 </div>
-
-                <!-- Parameters -->
-                <div class="params-panel">
-                    <h3>PARAMETRELer</h3>
-                    <div class="param-item">
-                        <label>Home Alt:</label>
-                        <input type="number" value="50" />
+                <div class="telem-item">
+                    <div class="telem-icon"><i class="fas fa-location-dot"></i></div>
+                    <div class="telem-data">
+                        <div class="telem-label">DISTANCE</div>
+                        <div class="telem-value" id="homeDistance">0 m</div>
                     </div>
-                    <div class="param-item">
-                        <label>Max Speed:</label>
-                        <input type="number" value="15" />
-                    </div>
-                    <div class="param-item">
-                        <label>RTL Alt:</label>
-                        <input type="number" value="100" />
+                </div>
+                <div class="telem-item">
+                    <div class="telem-icon"><i class="fas fa-satellite"></i></div>
+                    <div class="telem-data">
+                        <div class="telem-label">GPS</div>
+                        <div class="telem-value" id="gpsStatus">
+                            <span id="gpsSats">0</span> sats
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Footer Bar -->
-        <footer class="footer-bar">
-            <div class="footer-item">
-                <span class="footer-label">Flight Time:</span>
-                <span class="footer-value" id="flightTime">00:00:00</span>
+        <!-- Takeoff Slider -->
+        <div class="takeoff-slider ui-layer" id="takeoffSlider">
+            <div class="slider-track">
+                <span class="slider-text">KALKIŞ İÇİN KAYDIRIN</span>
+                <div class="slider-thumb" id="sliderThumb">
+                    <i class="fas fa-chevron-right"></i>
+                    <i class="fas fa-chevron-right"></i>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
             </div>
-            <div class="footer-item">
-                <span class="footer-label">Distance:</span>
-                <span class="footer-value" id="distance">0 m</span>
-            </div>
-            <div class="footer-item">
-                <span class="footer-label">Home Distance:</span>
-                <span class="footer-value" id="homeDistance">0 m</span>
-            </div>
-            <div class="footer-item">
-                <span class="footer-label">RC Signal:</span>
-                <span class="footer-value" id="rcSignal">0%</span>
-            </div>
-            <div class="footer-item">
-                <span class="footer-label">Telemetry:</span>
-                <span class="footer-value" id="telemetrySignal">0%</span>
-            </div>
-        </footer>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

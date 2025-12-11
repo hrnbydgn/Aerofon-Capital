@@ -1,9 +1,12 @@
-// Drone GCS Application
-class DroneGCS {
+// QGroundControl Web Application
+class QGroundControl {
     constructor() {
-        this.connected = false;
+        this.connected = true;
         this.armed = false;
         this.flightMode = 'STABILIZE';
+        this.map = null;
+        this.droneMarker = null;
+        
         this.telemetry = {
             altitude: 0,
             groundspeed: 0,
@@ -12,123 +15,207 @@ class DroneGCS {
             heading: 0,
             roll: 0,
             pitch: 0,
+            yaw: 0,
             battery: {
                 voltage: 16.8,
                 percent: 100,
-                current: 0
+                current: 0.0
             },
             gps: {
-                fix: 0,
-                satellites: 0,
-                hdop: 99.9,
-                lat: 39.9334,
-                lon: 32.8597
+                fix: 3,
+                satellites: 12,
+                hdop: 1.2,
+                lat: 41.0082,
+                lon: 28.9784
             },
-            rcSignal: 0,
-            telemetrySignal: 0
+            signals: {
+                rc: 100,
+                telemetry: 100
+            },
+            distance: 0,
+            homeDistance: 0
         };
+        
         this.flightTime = 0;
-        this.map = null;
-        this.planMap = null;
-        this.droneMarker = null;
+        this.flightStartTime = null;
+        this.animationFrame = null;
         
         this.init();
     }
     
     init() {
-        this.setupMaps();
+        console.log('QGroundControl initializing...');
+        this.setupMap();
         this.setupEventListeners();
         this.setupInstruments();
         this.startSimulation();
-        this.startUpdateLoop();
+        this.startAnimationLoop();
     }
     
-    setupMaps() {
-        // Main map
-        this.map = L.map('map').setView([39.9334, 32.8597], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+    setupMap() {
+        // Initialize map
+        this.map = L.map('map', {
+            zoomControl: true,
+            attributionControl: false
+        }).setView([this.telemetry.gps.lat, this.telemetry.gps.lon], 18);
+        
+        // Satellite imagery tile layer
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19
         }).addTo(this.map);
         
-        // Drone marker
+        // Drone marker with icon
         const droneIcon = L.divIcon({
-            className: 'drone-marker',
-            html: `<div style="color: #4CAF50; font-size: 24px;">▲</div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            html: '<div class="drone-marker"><i class="fas fa-plane"></i></div>',
+            className: 'custom-drone-marker',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
         });
         
-        this.droneMarker = L.marker([39.9334, 32.8597], {icon: droneIcon}).addTo(this.map);
+        this.droneMarker = L.marker(
+            [this.telemetry.gps.lat, this.telemetry.gps.lon],
+            { icon: droneIcon }
+        ).addTo(this.map);
         
-        // Plan map
-        this.planMap = L.map('planMap').setView([39.9334, 32.8597], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(this.planMap);
+        // Home marker
+        const homeIcon = L.divIcon({
+            html: '<div style="color: #28a745; font-size: 24px;"><i class="fas fa-home"></i></div>',
+            className: 'home-marker',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
+        
+        L.marker([this.telemetry.gps.lat, this.telemetry.gps.lon], { icon: homeIcon }).addTo(this.map);
     }
     
     setupEventListeners() {
-        // View tabs
-        document.querySelectorAll('.view-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
-                
-                e.target.classList.add('active');
-                const view = e.target.dataset.view;
-                document.getElementById(`${view}View`).classList.add('active');
-                
-                // Invalidate map size when switching to map views
-                if (view === 'map') {
-                    setTimeout(() => this.map.invalidateSize(), 100);
-                } else if (view === 'plan') {
-                    setTimeout(() => this.planMap.invalidateSize(), 100);
+        // ARM button
+        const armBtn = document.getElementById('armBtn');
+        if (armBtn) {
+            armBtn.addEventListener('click', () => this.toggleArm());
+        }
+        
+        // Tool buttons
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (btn.dataset.tool) {
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
                 }
             });
         });
         
-        // Flight mode buttons
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                this.flightMode = e.target.textContent;
-                this.addMessage(`Uçuş modu: ${this.flightMode}`, 'info');
-            });
-        });
+        // Slider
+        this.setupSlider();
+    }
+    
+    setupSlider() {
+        const sliderThumb = document.getElementById('sliderThumb');
+        const sliderContainer = document.getElementById('takeoffSlider');
         
-        // ARM button
-        document.getElementById('armBtn').addEventListener('click', (e) => {
-            this.armed = !this.armed;
-            e.target.classList.toggle('armed');
-            e.target.textContent = this.armed ? 'DISARM' : 'ARM';
-            this.addMessage(this.armed ? 'Sistem arm edildi' : 'Sistem disarm edildi', 
-                           this.armed ? 'warning' : 'info');
-        });
+        if (!sliderThumb || !sliderContainer) return;
         
-        // Action buttons
-        document.querySelectorAll('.action-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const action = e.target.textContent;
-                this.addMessage(`Komut gönderildi: ${action}`, 'info');
-            });
-        });
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        const maxDistance = 250; // 320 - 70 (track width - thumb width)
+        
+        const startDrag = (e) => {
+            isDragging = true;
+            startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+            currentX = parseInt(sliderThumb.style.left) || 0;
+        };
+        
+        const onDrag = (e) => {
+            if (!isDragging) return;
+            
+            const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+            let distance = currentX + (clientX - startX);
+            
+            if (distance < 0) distance = 0;
+            if (distance > maxDistance) distance = maxDistance;
+            
+            sliderThumb.style.left = distance + 'px';
+            
+            // Complete takeoff
+            if (distance >= maxDistance) {
+                isDragging = false;
+                this.executeTakeoff();
+            }
+        };
+        
+        const stopDrag = () => {
+            if (isDragging) {
+                isDragging = false;
+                sliderThumb.style.left = '0px';
+            }
+        };
+        
+        sliderThumb.addEventListener('mousedown', startDrag);
+        sliderThumb.addEventListener('touchstart', startDrag);
+        
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('touchmove', onDrag);
+        
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchend', stopDrag);
     }
     
     setupInstruments() {
         this.attitudeCanvas = document.getElementById('attitudeCanvas');
-        this.attitudeCtx = this.attitudeCanvas.getContext('2d');
+        this.attitudeCtx = this.attitudeCanvas ? this.attitudeCanvas.getContext('2d') : null;
         
         this.compassCanvas = document.getElementById('compassCanvas');
-        this.compassCtx = this.compassCanvas.getContext('2d');
+        this.compassCtx = this.compassCanvas ? this.compassCanvas.getContext('2d') : null;
+    }
+    
+    toggleArm() {
+        this.armed = !this.armed;
+        const armBtn = document.getElementById('armBtn');
+        
+        if (this.armed) {
+            armBtn.classList.add('armed');
+            armBtn.querySelector('span').textContent = 'DISARM';
+            this.flightStartTime = Date.now();
+        } else {
+            armBtn.classList.remove('armed');
+            armBtn.querySelector('span').textContent = 'ARM';
+            this.flightStartTime = null;
+            this.flightTime = 0;
+        }
+    }
+    
+    executeTakeoff() {
+        const slider = document.getElementById('takeoffSlider');
+        if (slider) {
+            slider.classList.remove('show');
+        }
+        
+        if (!this.armed) {
+            this.toggleArm();
+        }
+        
+        // Simulate takeoff
+        let targetAltitude = 10;
+        let takeoffInterval = setInterval(() => {
+            if (this.telemetry.altitude < targetAltitude) {
+                this.telemetry.altitude += 0.5;
+                this.telemetry.climbrate = 2.0;
+            } else {
+                this.telemetry.climbrate = 0;
+                clearInterval(takeoffInterval);
+            }
+        }, 100);
     }
     
     drawAttitudeIndicator() {
+        if (!this.attitudeCtx) return;
+        
         const ctx = this.attitudeCtx;
         const canvas = this.attitudeCanvas;
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const radius = 80;
+        const radius = 75;
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
@@ -137,47 +224,109 @@ class DroneGCS {
         ctx.translate(centerX, centerY);
         ctx.rotate(this.telemetry.roll * Math.PI / 180);
         
-        // Sky
-        ctx.fillStyle = '#4A90E2';
-        ctx.fillRect(-radius, -radius - this.telemetry.pitch * 2, radius * 2, radius + this.telemetry.pitch * 2);
+        // Sky (top half)
+        const gradient1 = ctx.createLinearGradient(0, -radius, 0, 0);
+        gradient1.addColorStop(0, '#1e88e5');
+        gradient1.addColorStop(1, '#42a5f5');
+        ctx.fillStyle = gradient1;
+        ctx.fillRect(-radius, -radius - this.telemetry.pitch * 3, radius * 2, radius + this.telemetry.pitch * 3);
         
-        // Ground
-        ctx.fillStyle = '#8B4513';
-        ctx.fillRect(-radius, -this.telemetry.pitch * 2, radius * 2, radius * 2);
+        // Ground (bottom half)
+        const gradient2 = ctx.createLinearGradient(0, 0, 0, radius);
+        gradient2.addColorStop(0, '#6d4c41');
+        gradient2.addColorStop(1, '#5d4037');
+        ctx.fillStyle = gradient2;
+        ctx.fillRect(-radius, -this.telemetry.pitch * 3, radius * 2, radius * 2);
         
         // Horizon line
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(-radius, -this.telemetry.pitch * 2);
-        ctx.lineTo(radius, -this.telemetry.pitch * 2);
+        ctx.moveTo(-radius, -this.telemetry.pitch * 3);
+        ctx.lineTo(radius, -this.telemetry.pitch * 3);
         ctx.stroke();
+        
+        // Pitch ladder
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        
+        for (let i = -30; i <= 30; i += 10) {
+            if (i === 0) continue;
+            const y = -this.telemetry.pitch * 3 - i * 2;
+            const lineWidth = i % 20 === 0 ? 40 : 25;
+            
+            ctx.beginPath();
+            ctx.moveTo(-lineWidth / 2, y);
+            ctx.lineTo(lineWidth / 2, y);
+            ctx.stroke();
+            
+            if (i % 20 === 0) {
+                ctx.fillText(i.toString(), -lineWidth / 2 - 15, y + 4);
+                ctx.fillText(i.toString(), lineWidth / 2 + 15, y + 4);
+            }
+        }
         
         ctx.restore();
         
-        // Center reference
-        ctx.strokeStyle = '#FFC107';
+        // Center reference (aircraft symbol)
+        ctx.strokeStyle = '#ffc107';
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(centerX - 30, centerY);
-        ctx.lineTo(centerX - 10, centerY);
-        ctx.moveTo(centerX + 10, centerY);
-        ctx.lineTo(centerX + 30, centerY);
+        ctx.moveTo(centerX - 40, centerY);
+        ctx.lineTo(centerX - 15, centerY);
+        ctx.moveTo(centerX + 15, centerY);
+        ctx.lineTo(centerX + 40, centerY);
         ctx.stroke();
         
         ctx.beginPath();
         ctx.arc(centerX, centerY, 5, 0, 2 * Math.PI);
-        ctx.stroke();
+        ctx.fillStyle = '#ffc107';
+        ctx.fill();
         
         // Outer circle
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         ctx.stroke();
+        
+        // Roll indicator
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        
+        // Roll scale
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        for (let angle = -60; angle <= 60; angle += 15) {
+            ctx.save();
+            ctx.rotate(angle * Math.PI / 180);
+            ctx.beginPath();
+            const tickLength = angle % 30 === 0 ? 12 : 8;
+            ctx.moveTo(0, -radius);
+            ctx.lineTo(0, -radius + tickLength);
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        // Roll pointer
+        ctx.rotate(this.telemetry.roll * Math.PI / 180);
+        ctx.fillStyle = '#ffc107';
+        ctx.beginPath();
+        ctx.moveTo(0, -radius + 5);
+        ctx.lineTo(-8, -radius + 15);
+        ctx.lineTo(8, -radius + 15);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
     }
     
     drawCompass() {
+        if (!this.compassCtx) return;
+        
         const ctx = this.compassCtx;
         const canvas = this.compassCanvas;
         const centerX = canvas.width / 2;
@@ -187,176 +336,239 @@ class DroneGCS {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Outer circle
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         ctx.stroke();
         
-        // Rotate for heading
+        // Inner circle
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius - 10, 0, 2 * Math.PI);
+        ctx.stroke();
+        
+        // Rotate context for heading
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(-this.telemetry.heading * Math.PI / 180);
         
-        // Cardinal directions
-        const directions = ['N', 'E', 'S', 'W'];
-        const angles = [0, 90, 180, 270];
+        // Draw cardinal directions
+        const directions = [
+            { text: 'N', angle: 0, color: '#dc3545' },
+            { text: 'E', angle: 90, color: '#ffffff' },
+            { text: 'S', angle: 180, color: '#ffffff' },
+            { text: 'W', angle: 270, color: '#ffffff' }
+        ];
         
-        ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        directions.forEach((dir, i) => {
-            const angle = angles[i] * Math.PI / 180;
-            const x = Math.sin(angle) * (radius - 20);
-            const y = -Math.cos(angle) * (radius - 20);
-            
+        directions.forEach(dir => {
             ctx.save();
-            ctx.translate(x, y);
+            ctx.rotate(dir.angle * Math.PI / 180);
+            ctx.translate(0, -radius + 20);
             ctx.rotate(this.telemetry.heading * Math.PI / 180);
-            
-            if (dir === 'N') {
-                ctx.fillStyle = '#f44336';
-            } else {
-                ctx.fillStyle = '#ffffff';
-            }
-            
-            ctx.fillText(dir, 0, 0);
+            ctx.fillStyle = dir.color;
+            ctx.fillText(dir.text, 0, 0);
             ctx.restore();
         });
         
+        // Draw degree ticks
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 360; i += 10) {
+            ctx.save();
+            ctx.rotate(i * Math.PI / 180);
+            ctx.beginPath();
+            const tickLength = i % 30 === 0 ? 8 : 4;
+            ctx.moveTo(0, -radius);
+            ctx.lineTo(0, -radius + tickLength);
+            ctx.stroke();
+            ctx.restore();
+        }
+        
         ctx.restore();
         
-        // Heading pointer
-        ctx.fillStyle = '#4CAF50';
+        // Draw heading pointer (fixed at top)
+        ctx.fillStyle = '#ffc107';
         ctx.beginPath();
-        ctx.moveTo(centerX, centerY - radius + 10);
-        ctx.lineTo(centerX - 8, centerY - radius + 25);
-        ctx.lineTo(centerX + 8, centerY - radius + 25);
+        ctx.moveTo(centerX, centerY - radius + 5);
+        ctx.lineTo(centerX - 8, centerY - radius + 15);
+        ctx.lineTo(centerX + 8, centerY - radius + 15);
         ctx.closePath();
+        ctx.fill();
+        
+        // Draw center dot
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
+        ctx.fillStyle = '#007bff';
         ctx.fill();
     }
     
     startSimulation() {
-        // Simulate connection after 2 seconds
-        setTimeout(() => {
-            this.connected = true;
-            document.querySelector('.status-indicator').classList.remove('disconnected');
-            document.querySelector('.status-indicator').classList.add('connected');
-            document.querySelector('.status-text').textContent = 'Bağlı';
-            this.addMessage('Drone bağlantısı kuruldu', 'info');
-            
-            // Simulate GPS fix
-            setTimeout(() => {
-                this.telemetry.gps.fix = 3;
-                this.telemetry.gps.satellites = 12;
-                this.telemetry.gps.hdop = 1.2;
-                this.addMessage('GPS fix alındı', 'info');
-            }, 1000);
-        }, 2000);
-        
         // Simulate telemetry updates
         setInterval(() => {
-            if (this.connected && this.armed) {
-                // Simulate flight
-                this.telemetry.altitude += (Math.random() - 0.5) * 2;
-                this.telemetry.altitude = Math.max(0, this.telemetry.altitude);
+            if (this.armed) {
+                // Update heading (rotate)
+                this.telemetry.heading = (this.telemetry.heading + 0.5) % 360;
                 
-                this.telemetry.groundspeed = 5 + Math.random() * 3;
-                this.telemetry.airspeed = this.telemetry.groundspeed + Math.random() * 2;
-                this.telemetry.climbrate = (Math.random() - 0.5) * 2;
-                
-                this.telemetry.heading = (this.telemetry.heading + 1) % 360;
-                this.telemetry.roll = Math.sin(Date.now() / 1000) * 15;
-                this.telemetry.pitch = Math.sin(Date.now() / 1500) * 10;
-                
-                this.telemetry.battery.voltage -= 0.001;
-                this.telemetry.battery.percent = ((this.telemetry.battery.voltage - 14.8) / (16.8 - 14.8)) * 100;
-                this.telemetry.battery.current = 15 + Math.random() * 5;
-                
-                this.telemetry.rcSignal = 95 + Math.random() * 5;
-                this.telemetry.telemetrySignal = 90 + Math.random() * 10;
+                // Simulate movement
+                const headingRad = this.telemetry.heading * Math.PI / 180;
+                const speed = this.telemetry.groundspeed / 111320; // m/s to degrees
+                this.telemetry.gps.lat += Math.cos(headingRad) * speed * 0.1;
+                this.telemetry.gps.lon += Math.sin(headingRad) * speed * 0.1;
                 
                 // Update drone position on map
-                const newLat = this.telemetry.gps.lat + (Math.random() - 0.5) * 0.001;
-                const newLon = this.telemetry.gps.lon + (Math.random() - 0.5) * 0.001;
-                this.telemetry.gps.lat = newLat;
-                this.telemetry.gps.lon = newLon;
-                this.droneMarker.setLatLng([newLat, newLon]);
+                if (this.droneMarker) {
+                    this.droneMarker.setLatLng([this.telemetry.gps.lat, this.telemetry.gps.lon]);
+                    
+                    // Rotate drone icon
+                    const droneElement = this.droneMarker.getElement();
+                    if (droneElement) {
+                        const icon = droneElement.querySelector('.drone-marker i');
+                        if (icon) {
+                            icon.style.transform = `rotate(${this.telemetry.heading - 45}deg)`;
+                        }
+                    }
+                }
                 
-                this.flightTime++;
+                // Random variations
+                this.telemetry.roll = Math.sin(Date.now() / 2000) * 10;
+                this.telemetry.pitch = Math.sin(Date.now() / 2500) * 8;
+                this.telemetry.groundspeed = 5 + Math.random() * 3;
+                
+                if (Math.random() < 0.3) {
+                    this.telemetry.climbrate = (Math.random() - 0.5) * 2;
+                }
+                
+                // Battery drain
+                this.telemetry.battery.voltage -= 0.0005;
+                this.telemetry.battery.percent = Math.max(0, ((this.telemetry.battery.voltage - 14.0) / (16.8 - 14.0)) * 100);
+                this.telemetry.battery.current = 15 + Math.random() * 5;
+                
+                // Distance calculation
+                this.telemetry.distance += this.telemetry.groundspeed * 0.1;
             }
         }, 100);
     }
     
-    startUpdateLoop() {
-        setInterval(() => {
+    startAnimationLoop() {
+        const animate = () => {
             this.updateDisplay();
             this.drawAttitudeIndicator();
             this.drawCompass();
-        }, 50);
+            this.animationFrame = requestAnimationFrame(animate);
+        };
+        animate();
     }
     
     updateDisplay() {
-        // Telemetry
-        document.getElementById('altitude').textContent = this.telemetry.altitude.toFixed(1) + ' m';
-        document.getElementById('groundspeed').textContent = this.telemetry.groundspeed.toFixed(1) + ' m/s';
-        document.getElementById('airspeed').textContent = this.telemetry.airspeed.toFixed(1) + ' m/s';
-        document.getElementById('climbrate').textContent = this.telemetry.climbrate.toFixed(1) + ' m/s';
-        document.getElementById('heading').textContent = Math.round(this.telemetry.heading) + '°';
+        // Telemetry values
+        this.updateElement('altitude', this.telemetry.altitude.toFixed(1) + ' m');
+        this.updateElement('groundspeed', this.telemetry.groundspeed.toFixed(1) + ' m/s');
+        this.updateElement('climbrate', this.telemetry.climbrate.toFixed(1) + ' m/s');
+        this.updateElement('homeDistance', Math.round(this.telemetry.distance) + ' m');
+        this.updateElement('gpsSats', this.telemetry.gps.satellites);
+        
+        // Heading display
+        this.updateElement('headingDisplay', Math.round(this.telemetry.heading) + '°');
         
         // Battery
-        const batteryPercent = Math.max(0, Math.min(100, this.telemetry.battery.percent));
-        document.getElementById('batteryLevel').style.width = batteryPercent + '%';
-        document.getElementById('batteryVoltage').textContent = this.telemetry.battery.voltage.toFixed(1) + 'V';
-        document.getElementById('batteryPercent').textContent = Math.round(batteryPercent) + '%';
-        document.getElementById('batteryCurrent').textContent = this.telemetry.battery.current.toFixed(1) + 'A';
-        
-        if (batteryPercent < 20) {
-            document.getElementById('batteryLevel').classList.add('low');
-        } else {
-            document.getElementById('batteryLevel').classList.remove('low');
+        const batteryIcon = document.getElementById('batteryIcon');
+        const batteryVoltage = document.getElementById('batteryVoltage');
+        if (batteryIcon && batteryVoltage) {
+            batteryVoltage.textContent = this.telemetry.battery.voltage.toFixed(1) + 'V';
+            
+            if (this.telemetry.battery.percent < 20) {
+                batteryIcon.className = 'fas fa-battery-empty';
+                batteryIcon.style.color = '#dc3545';
+            } else if (this.telemetry.battery.percent < 50) {
+                batteryIcon.className = 'fas fa-battery-half';
+                batteryIcon.style.color = '#ffc107';
+            } else {
+                batteryIcon.className = 'fas fa-battery-full';
+                batteryIcon.style.color = '#28a745';
+            }
         }
         
-        // GPS
-        const gpsStatuses = ['No Fix', '2D Fix', '3D Fix', 'DGPS', 'RTK'];
-        document.getElementById('gpsStatus').textContent = gpsStatuses[this.telemetry.gps.fix] || 'No Fix';
-        document.getElementById('gpsSats').textContent = this.telemetry.gps.satellites;
-        document.getElementById('gpsHdop').textContent = this.telemetry.gps.hdop.toFixed(1);
-        
-        // HUD
-        document.getElementById('hudLat').textContent = this.telemetry.gps.lat.toFixed(7);
-        document.getElementById('hudLon').textContent = this.telemetry.gps.lon.toFixed(7);
-        
-        // Footer
-        const hours = Math.floor(this.flightTime / 36000);
-        const minutes = Math.floor((this.flightTime % 36000) / 600);
-        const seconds = Math.floor((this.flightTime % 600) / 10);
-        document.getElementById('flightTime').textContent = 
-            `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
-        document.getElementById('distance').textContent = Math.round(this.telemetry.groundspeed * this.flightTime / 10) + ' m';
-        document.getElementById('homeDistance').textContent = Math.round(Math.random() * 100) + ' m';
-        document.getElementById('rcSignal').textContent = Math.round(this.telemetry.rcSignal) + '%';
-        document.getElementById('telemetrySignal').textContent = Math.round(this.telemetry.telemetrySignal) + '%';
+        // Flight time
+        if (this.flightStartTime) {
+            const elapsed = Math.floor((Date.now() - this.flightStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            this.updateElement('flightTime', 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        }
     }
     
-    addMessage(text, type = 'info') {
-        const messagesList = document.getElementById('messagesList');
-        const message = document.createElement('div');
-        message.className = `message ${type}`;
-        message.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
-        messagesList.insertBefore(message, messagesList.firstChild);
-        
-        // Keep only last 20 messages
-        while (messagesList.children.length > 20) {
-            messagesList.removeChild(messagesList.lastChild);
+    updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
         }
     }
 }
 
-// Initialize application when DOM is loaded
+// Swap Views Function (Global)
+function swapViews() {
+    const mapContainer = document.getElementById('map-container');
+    const cameraContainer = document.getElementById('camera-container');
+    
+    if (!mapContainer || !cameraContainer) return;
+    
+    const isMapFullscreen = mapContainer.classList.contains('mode-fullscreen');
+    
+    if (isMapFullscreen) {
+        // Swap: Map to PIP, Camera to Fullscreen
+        mapContainer.classList.remove('mode-fullscreen');
+        mapContainer.classList.add('mode-pip');
+        
+        cameraContainer.classList.remove('mode-pip');
+        cameraContainer.classList.add('mode-fullscreen');
+        
+        // Update click handlers
+        cameraContainer.removeAttribute('onclick');
+        mapContainer.setAttribute('onclick', 'swapViews()');
+    } else {
+        // Swap: Camera to PIP, Map to Fullscreen
+        mapContainer.classList.remove('mode-pip');
+        mapContainer.classList.add('mode-fullscreen');
+        
+        cameraContainer.classList.remove('mode-fullscreen');
+        cameraContainer.classList.add('mode-pip');
+        
+        // Update click handlers
+        mapContainer.removeAttribute('onclick');
+        cameraContainer.setAttribute('onclick', 'swapViews()');
+    }
+    
+    // Invalidate map size after animation
+    setTimeout(() => {
+        if (window.qgcApp && window.qgcApp.map) {
+            window.qgcApp.map.invalidateSize();
+        }
+    }, 500);
+}
+
+// Toggle Takeoff Slider (Global)
+function toggleTakeoffSlider() {
+    const slider = document.getElementById('takeoffSlider');
+    if (slider) {
+        slider.classList.toggle('show');
+        
+        // Reset thumb position
+        const thumb = document.getElementById('sliderThumb');
+        if (thumb) {
+            thumb.style.left = '0px';
+        }
+    }
+}
+
+// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new DroneGCS();
+    console.log('Initializing QGroundControl...');
+    window.qgcApp = new QGroundControl();
 });
