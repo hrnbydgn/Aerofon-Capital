@@ -1,17 +1,18 @@
-// QGroundControl Web Application
-class QGroundControl {
+// QGroundControl Next Gen - Advanced Drone Control System
+class DroneController {
     constructor() {
-        this.connected = true;
-        this.armed = false;
-        this.flightMode = 'STABILIZE';
-        this.map = null;
-        this.droneMarker = null;
+        this.state = {
+            connected: true,
+            armed: false,
+            mode: 'stabilize',
+            inFlight: false
+        };
         
         this.telemetry = {
             altitude: 0,
-            groundspeed: 0,
-            airspeed: 0,
-            climbrate: 0,
+            targetAltitude: 0,
+            speed: 0,
+            climbRate: 0,
             heading: 0,
             roll: 0,
             pitch: 0,
@@ -19,55 +20,67 @@ class QGroundControl {
             battery: {
                 voltage: 16.8,
                 percent: 100,
-                current: 0.0
+                current: 0
             },
             gps: {
-                fix: 3,
+                lat: 41.0082,
+                lon: 28.9784,
                 satellites: 12,
                 hdop: 1.2,
-                lat: 41.0082,
-                lon: 28.9784
-            },
-            signals: {
-                rc: 100,
-                telemetry: 100
+                fix: 3
             },
             distance: 0,
-            homeDistance: 0
+            homeDistance: 0,
+            flightTime: 0
         };
         
-        this.flightTime = 0;
-        this.flightStartTime = null;
-        this.animationFrame = null;
+        this.map = null;
+        this.droneMarker = null;
+        this.homeMarker = null;
+        this.flightPath = [];
+        this.pathPolyline = null;
+        
+        this.altitudeHistory = new Array(60).fill(0);
+        this.altChart = null;
+        
+        this.startTime = null;
+        this.lastUpdate = Date.now();
         
         this.init();
     }
     
     init() {
-        console.log('QGroundControl initializing...');
+        console.log('🚀 Initializing QGroundControl Next Gen...');
+        
         this.setupMap();
         this.setupEventListeners();
         this.setupInstruments();
-        this.startSimulation();
-        this.startAnimationLoop();
+        this.setupAltitudeGraph();
+        this.startMainLoop();
+        
+        console.log('✅ System ready');
     }
     
     setupMap() {
-        // Initialize map
-        this.map = L.map('map', {
-            zoomControl: true,
-            attributionControl: false
-        }).setView([this.telemetry.gps.lat, this.telemetry.gps.lon], 18);
+        const mapView = document.getElementById('map-view');
         
-        // Satellite imagery tile layer
+        this.map = L.map(mapView, {
+            zoomControl: true,
+            attributionControl: false,
+            preferCanvas: true
+        }).setView([this.telemetry.gps.lat, this.telemetry.gps.lon], 17);
+        
+        // Satellite imagery
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19
         }).addTo(this.map);
         
-        // Drone marker with icon
+        // Drone marker
         const droneIcon = L.divIcon({
-            html: '<div class="drone-marker"><i class="fas fa-plane"></i></div>',
-            className: 'custom-drone-marker',
+            html: `<div style="color: #ff3366; font-size: 32px; filter: drop-shadow(0 0 8px #ff3366);">
+                    <i class="fas fa-location-crosshairs"></i>
+                   </div>`,
+            className: 'drone-icon',
             iconSize: [32, 32],
             iconAnchor: [16, 16]
         });
@@ -79,66 +92,86 @@ class QGroundControl {
         
         // Home marker
         const homeIcon = L.divIcon({
-            html: '<div style="color: #28a745; font-size: 24px;"><i class="fas fa-home"></i></div>',
-            className: 'home-marker',
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
+            html: `<div style="color: #00ff88; font-size: 28px; filter: drop-shadow(0 0 8px #00ff88);">
+                    <i class="fas fa-house-flag"></i>
+                   </div>`,
+            className: 'home-icon',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
         });
         
-        L.marker([this.telemetry.gps.lat, this.telemetry.gps.lon], { icon: homeIcon }).addTo(this.map);
+        this.homeMarker = L.marker(
+            [this.telemetry.gps.lat, this.telemetry.gps.lon],
+            { icon: homeIcon }
+        ).addTo(this.map);
+        
+        // Flight path
+        this.pathPolyline = L.polyline([], {
+            color: '#00d4ff',
+            weight: 3,
+            opacity: 0.7
+        }).addTo(this.map);
+        
+        // Add scale
+        L.control.scale({ imperial: false }).addTo(this.map);
     }
     
     setupEventListeners() {
         // ARM button
         const armBtn = document.getElementById('armBtn');
-        if (armBtn) {
-            armBtn.addEventListener('click', () => this.toggleArm());
-        }
+        armBtn?.addEventListener('click', () => this.toggleArm());
         
-        // Tool buttons
-        document.querySelectorAll('.tool-btn').forEach(btn => {
+        // Mode buttons
+        document.querySelectorAll('.mode-option').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                if (btn.dataset.tool) {
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                }
+                document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.state.mode = btn.dataset.mode;
+                console.log(`Mode changed to: ${this.state.mode.toUpperCase()}`);
             });
         });
         
-        // Slider
-        this.setupSlider();
+        // Nav tools
+        document.querySelectorAll('.nav-tool').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.nav-tool').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        
+        // Slider setup
+        this.setupTakeoffSlider();
     }
     
-    setupSlider() {
-        const sliderThumb = document.getElementById('sliderThumb');
-        const sliderContainer = document.getElementById('takeoffSlider');
+    setupTakeoffSlider() {
+        const handle = document.getElementById('sliderHandle');
+        const track = handle?.parentElement;
         
-        if (!sliderThumb || !sliderContainer) return;
+        if (!handle || !track) return;
         
         let isDragging = false;
         let startX = 0;
-        let currentX = 0;
-        const maxDistance = 250; // 320 - 70 (track width - thumb width)
+        let currentLeft = 0;
+        const maxDistance = track.offsetWidth - handle.offsetWidth - 10;
         
         const startDrag = (e) => {
             isDragging = true;
-            startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
-            currentX = parseInt(sliderThumb.style.left) || 0;
+            startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            currentLeft = parseInt(handle.style.left) || 0;
+            handle.style.transition = 'none';
         };
         
         const onDrag = (e) => {
             if (!isDragging) return;
             
-            const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
-            let distance = currentX + (clientX - startX);
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            let distance = currentLeft + (clientX - startX);
             
-            if (distance < 0) distance = 0;
-            if (distance > maxDistance) distance = maxDistance;
+            distance = Math.max(0, Math.min(distance, maxDistance));
+            handle.style.left = distance + 'px';
             
-            sliderThumb.style.left = distance + 'px';
-            
-            // Complete takeoff
-            if (distance >= maxDistance) {
+            // Complete action
+            if (distance >= maxDistance * 0.95) {
                 isDragging = false;
                 this.executeTakeoff();
             }
@@ -147,103 +180,121 @@ class QGroundControl {
         const stopDrag = () => {
             if (isDragging) {
                 isDragging = false;
-                sliderThumb.style.left = '0px';
+                handle.style.transition = 'left 0.3s ease';
+                handle.style.left = '0px';
             }
         };
         
-        sliderThumb.addEventListener('mousedown', startDrag);
-        sliderThumb.addEventListener('touchstart', startDrag);
-        
+        handle.addEventListener('mousedown', startDrag);
+        handle.addEventListener('touchstart', startDrag);
         document.addEventListener('mousemove', onDrag);
         document.addEventListener('touchmove', onDrag);
-        
         document.addEventListener('mouseup', stopDrag);
         document.addEventListener('touchend', stopDrag);
     }
     
     setupInstruments() {
-        this.attitudeCanvas = document.getElementById('attitudeCanvas');
-        this.attitudeCtx = this.attitudeCanvas ? this.attitudeCanvas.getContext('2d') : null;
+        this.horizonCanvas = document.getElementById('horizonCanvas');
+        this.horizonCtx = this.horizonCanvas?.getContext('2d');
         
         this.compassCanvas = document.getElementById('compassCanvas');
-        this.compassCtx = this.compassCanvas ? this.compassCanvas.getContext('2d') : null;
+        this.compassCtx = this.compassCanvas?.getContext('2d');
+    }
+    
+    setupAltitudeGraph() {
+        const canvas = document.getElementById('altGraph');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        this.altChart = {
+            canvas: canvas,
+            ctx: ctx,
+            data: new Array(60).fill(0)
+        };
     }
     
     toggleArm() {
-        this.armed = !this.armed;
+        this.state.armed = !this.state.armed;
         const armBtn = document.getElementById('armBtn');
         
-        if (this.armed) {
+        if (this.state.armed) {
             armBtn.classList.add('armed');
             armBtn.querySelector('span').textContent = 'DISARM';
-            this.flightStartTime = Date.now();
+            this.startTime = Date.now();
+            console.log('✅ System ARMED');
         } else {
             armBtn.classList.remove('armed');
             armBtn.querySelector('span').textContent = 'ARM';
-            this.flightStartTime = null;
-            this.flightTime = 0;
+            this.state.inFlight = false;
+            this.startTime = null;
+            console.log('⚠️ System DISARMED');
         }
     }
     
     executeTakeoff() {
-        const slider = document.getElementById('takeoffSlider');
-        if (slider) {
-            slider.classList.remove('show');
-        }
+        closeTakeoffSlider();
         
-        if (!this.armed) {
+        if (!this.state.armed) {
             this.toggleArm();
         }
         
-        // Simulate takeoff
-        let targetAltitude = 10;
-        let takeoffInterval = setInterval(() => {
-            if (this.telemetry.altitude < targetAltitude) {
-                this.telemetry.altitude += 0.5;
-                this.telemetry.climbrate = 2.0;
+        const targetAlt = parseFloat(document.getElementById('takeoffAlt')?.value) || 10;
+        const climbRate = parseFloat(document.getElementById('takeoffRate')?.value) || 2.5;
+        
+        this.state.inFlight = true;
+        this.telemetry.targetAltitude = targetAlt;
+        
+        console.log(`🛫 TAKEOFF initiated - Target: ${targetAlt}m, Climb rate: ${climbRate}m/s`);
+        
+        // Smooth climb animation
+        const climbInterval = setInterval(() => {
+            if (this.telemetry.altitude < this.telemetry.targetAltitude) {
+                this.telemetry.altitude += climbRate * 0.1;
+                this.telemetry.climbRate = climbRate;
             } else {
-                this.telemetry.climbrate = 0;
-                clearInterval(takeoffInterval);
+                this.telemetry.altitude = this.telemetry.targetAltitude;
+                this.telemetry.climbRate = 0;
+                clearInterval(climbInterval);
+                console.log('✅ Target altitude reached');
             }
         }, 100);
     }
     
-    drawAttitudeIndicator() {
-        if (!this.attitudeCtx) return;
+    drawHorizon() {
+        if (!this.horizonCtx) return;
         
-        const ctx = this.attitudeCtx;
-        const canvas = this.attitudeCanvas;
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const radius = 75;
+        const ctx = this.horizonCtx;
+        const canvas = this.horizonCanvas;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const r = 85;
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Save context
         ctx.save();
-        ctx.translate(centerX, centerY);
+        ctx.translate(cx, cy);
         ctx.rotate(this.telemetry.roll * Math.PI / 180);
         
-        // Sky (top half)
-        const gradient1 = ctx.createLinearGradient(0, -radius, 0, 0);
-        gradient1.addColorStop(0, '#1e88e5');
-        gradient1.addColorStop(1, '#42a5f5');
-        ctx.fillStyle = gradient1;
-        ctx.fillRect(-radius, -radius - this.telemetry.pitch * 3, radius * 2, radius + this.telemetry.pitch * 3);
+        // Sky
+        const skyGrad = ctx.createLinearGradient(0, -r, 0, 0);
+        skyGrad.addColorStop(0, '#0066ff');
+        skyGrad.addColorStop(1, '#00aaff');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(-r, -r - this.telemetry.pitch * 4, r * 2, r + this.telemetry.pitch * 4);
         
-        // Ground (bottom half)
-        const gradient2 = ctx.createLinearGradient(0, 0, 0, radius);
-        gradient2.addColorStop(0, '#6d4c41');
-        gradient2.addColorStop(1, '#5d4037');
-        ctx.fillStyle = gradient2;
-        ctx.fillRect(-radius, -this.telemetry.pitch * 3, radius * 2, radius * 2);
+        // Ground
+        const groundGrad = ctx.createLinearGradient(0, 0, 0, r);
+        groundGrad.addColorStop(0, '#8B4513');
+        groundGrad.addColorStop(1, '#654321');
+        ctx.fillStyle = groundGrad;
+        ctx.fillRect(-r, -this.telemetry.pitch * 4, r * 2, r * 2);
         
         // Horizon line
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(-radius, -this.telemetry.pitch * 3);
-        ctx.lineTo(radius, -this.telemetry.pitch * 3);
+        ctx.moveTo(-r, -this.telemetry.pitch * 4);
+        ctx.lineTo(r, -this.telemetry.pitch * 4);
         ctx.stroke();
         
         // Pitch ladder
@@ -255,69 +306,71 @@ class QGroundControl {
         
         for (let i = -30; i <= 30; i += 10) {
             if (i === 0) continue;
-            const y = -this.telemetry.pitch * 3 - i * 2;
-            const lineWidth = i % 20 === 0 ? 40 : 25;
+            const y = -this.telemetry.pitch * 4 - i * 3;
+            const w = i % 20 === 0 ? 50 : 30;
             
             ctx.beginPath();
-            ctx.moveTo(-lineWidth / 2, y);
-            ctx.lineTo(lineWidth / 2, y);
+            ctx.moveTo(-w / 2, y);
+            ctx.lineTo(w / 2, y);
             ctx.stroke();
             
             if (i % 20 === 0) {
-                ctx.fillText(i.toString(), -lineWidth / 2 - 15, y + 4);
-                ctx.fillText(i.toString(), lineWidth / 2 + 15, y + 4);
+                ctx.save();
+                ctx.rotate(-this.telemetry.roll * Math.PI / 180);
+                ctx.fillText(Math.abs(i).toString(), -w / 2 - 20, y + 4);
+                ctx.fillText(Math.abs(i).toString(), w / 2 + 20, y + 4);
+                ctx.restore();
             }
         }
         
         ctx.restore();
         
-        // Center reference (aircraft symbol)
-        ctx.strokeStyle = '#ffc107';
-        ctx.lineWidth = 3;
+        // Aircraft symbol
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.moveTo(centerX - 40, centerY);
-        ctx.lineTo(centerX - 15, centerY);
-        ctx.moveTo(centerX + 15, centerY);
-        ctx.lineTo(centerX + 40, centerY);
+        ctx.moveTo(cx - 50, cy);
+        ctx.lineTo(cx - 20, cy);
+        ctx.moveTo(cx + 20, cy);
+        ctx.lineTo(cx + 50, cy);
         ctx.stroke();
         
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = '#ffc107';
+        ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffd700';
         ctx.fill();
         
-        // Outer circle
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        // Outer ring
+        ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.stroke();
         
         // Roll indicator
         ctx.save();
-        ctx.translate(centerX, centerY);
+        ctx.translate(cx, cy);
         
         // Roll scale
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 2;
         for (let angle = -60; angle <= 60; angle += 15) {
             ctx.save();
             ctx.rotate(angle * Math.PI / 180);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = angle % 30 === 0 ? 3 : 2;
             ctx.beginPath();
-            const tickLength = angle % 30 === 0 ? 12 : 8;
-            ctx.moveTo(0, -radius);
-            ctx.lineTo(0, -radius + tickLength);
+            ctx.moveTo(0, -r);
+            ctx.lineTo(0, -r + (angle % 30 === 0 ? 15 : 10));
             ctx.stroke();
             ctx.restore();
         }
         
         // Roll pointer
         ctx.rotate(this.telemetry.roll * Math.PI / 180);
-        ctx.fillStyle = '#ffc107';
+        ctx.fillStyle = '#00d4ff';
         ctx.beginPath();
-        ctx.moveTo(0, -radius + 5);
-        ctx.lineTo(-8, -radius + 15);
-        ctx.lineTo(8, -radius + 15);
+        ctx.moveTo(0, -r + 8);
+        ctx.lineTo(-10, -r + 20);
+        ctx.lineTo(10, -r + 20);
         ctx.closePath();
         ctx.fill();
         
@@ -329,246 +382,342 @@ class QGroundControl {
         
         const ctx = this.compassCtx;
         const canvas = this.compassCanvas;
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const radius = 60;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const r = 70;
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Outer circle
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        // Outer ring
+        ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.stroke();
         
-        // Inner circle
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(0, 212, 255, 0.2)';
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius - 10, 0, 2 * Math.PI);
+        ctx.arc(cx, cy, r - 15, 0, Math.PI * 2);
         ctx.stroke();
         
-        // Rotate context for heading
+        // Rotate for heading
         ctx.save();
-        ctx.translate(centerX, centerY);
+        ctx.translate(cx, cy);
         ctx.rotate(-this.telemetry.heading * Math.PI / 180);
         
-        // Draw cardinal directions
-        const directions = [
-            { text: 'N', angle: 0, color: '#dc3545' },
+        // Directions
+        const dirs = [
+            { text: 'N', angle: 0, color: '#ff3366' },
             { text: 'E', angle: 90, color: '#ffffff' },
             { text: 'S', angle: 180, color: '#ffffff' },
             { text: 'W', angle: 270, color: '#ffffff' }
         ];
         
-        ctx.font = 'bold 16px Arial';
+        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        directions.forEach(dir => {
+        dirs.forEach(dir => {
             ctx.save();
             ctx.rotate(dir.angle * Math.PI / 180);
-            ctx.translate(0, -radius + 20);
+            ctx.translate(0, -r + 25);
             ctx.rotate(this.telemetry.heading * Math.PI / 180);
             ctx.fillStyle = dir.color;
             ctx.fillText(dir.text, 0, 0);
             ctx.restore();
         });
         
-        // Draw degree ticks
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 1;
+        // Degree marks
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
         for (let i = 0; i < 360; i += 10) {
             ctx.save();
             ctx.rotate(i * Math.PI / 180);
+            ctx.lineWidth = i % 30 === 0 ? 2 : 1;
             ctx.beginPath();
-            const tickLength = i % 30 === 0 ? 8 : 4;
-            ctx.moveTo(0, -radius);
-            ctx.lineTo(0, -radius + tickLength);
+            ctx.moveTo(0, -r);
+            ctx.lineTo(0, -r + (i % 30 === 0 ? 10 : 5));
             ctx.stroke();
             ctx.restore();
         }
         
         ctx.restore();
         
-        // Draw heading pointer (fixed at top)
-        ctx.fillStyle = '#ffc107';
+        // Heading pointer
+        ctx.fillStyle = '#00d4ff';
         ctx.beginPath();
-        ctx.moveTo(centerX, centerY - radius + 5);
-        ctx.lineTo(centerX - 8, centerY - radius + 15);
-        ctx.lineTo(centerX + 8, centerY - radius + 15);
+        ctx.moveTo(cx, cy - r + 8);
+        ctx.lineTo(cx - 10, cy - r + 20);
+        ctx.lineTo(cx + 10, cy - r + 20);
         ctx.closePath();
         ctx.fill();
         
-        // Draw center dot
+        // Center dot
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = '#007bff';
+        ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#00d4ff';
         ctx.fill();
     }
     
-    startSimulation() {
-        // Simulate telemetry updates
-        setInterval(() => {
-            if (this.armed) {
-                // Update heading (rotate)
-                this.telemetry.heading = (this.telemetry.heading + 0.5) % 360;
-                
-                // Simulate movement
-                const headingRad = this.telemetry.heading * Math.PI / 180;
-                const speed = this.telemetry.groundspeed / 111320; // m/s to degrees
-                this.telemetry.gps.lat += Math.cos(headingRad) * speed * 0.1;
-                this.telemetry.gps.lon += Math.sin(headingRad) * speed * 0.1;
-                
-                // Update drone position on map
-                if (this.droneMarker) {
-                    this.droneMarker.setLatLng([this.telemetry.gps.lat, this.telemetry.gps.lon]);
-                    
-                    // Rotate drone icon
-                    const droneElement = this.droneMarker.getElement();
-                    if (droneElement) {
-                        const icon = droneElement.querySelector('.drone-marker i');
-                        if (icon) {
-                            icon.style.transform = `rotate(${this.telemetry.heading - 45}deg)`;
-                        }
-                    }
-                }
-                
-                // Random variations
-                this.telemetry.roll = Math.sin(Date.now() / 2000) * 10;
-                this.telemetry.pitch = Math.sin(Date.now() / 2500) * 8;
-                this.telemetry.groundspeed = 5 + Math.random() * 3;
-                
-                if (Math.random() < 0.3) {
-                    this.telemetry.climbrate = (Math.random() - 0.5) * 2;
-                }
-                
-                // Battery drain
-                this.telemetry.battery.voltage -= 0.0005;
-                this.telemetry.battery.percent = Math.max(0, ((this.telemetry.battery.voltage - 14.0) / (16.8 - 14.0)) * 100);
-                this.telemetry.battery.current = 15 + Math.random() * 5;
-                
-                // Distance calculation
-                this.telemetry.distance += this.telemetry.groundspeed * 0.1;
+    drawAltitudeGraph() {
+        if (!this.altChart) return;
+        
+        const { ctx, canvas, data } = this.altChart;
+        const w = canvas.width;
+        const h = canvas.height;
+        
+        ctx.clearRect(0, 0, w, h);
+        
+        // Background grid
+        ctx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 4; i++) {
+            const y = (h / 3) * i;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+        
+        // Data line
+        const max = Math.max(...data, 10);
+        ctx.strokeStyle = '#00d4ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        data.forEach((val, i) => {
+            const x = (w / data.length) * i;
+            const y = h - (val / max) * h;
+            
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
             }
-        }, 100);
+        });
+        
+        ctx.stroke();
+        
+        // Fill area
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(0, 212, 255, 0.1)';
+        ctx.fill();
     }
     
-    startAnimationLoop() {
-        const animate = () => {
-            this.updateDisplay();
-            this.drawAttitudeIndicator();
-            this.drawCompass();
-            this.animationFrame = requestAnimationFrame(animate);
-        };
-        animate();
+    updateSimulation() {
+        const dt = (Date.now() - this.lastUpdate) / 1000;
+        this.lastUpdate = Date.now();
+        
+        if (this.state.armed && this.state.inFlight) {
+            // Update heading
+            this.telemetry.heading = (this.telemetry.heading + 0.3) % 360;
+            
+            // Update position
+            const headingRad = this.telemetry.heading * Math.PI / 180;
+            const speedDeg = (this.telemetry.speed / 111320) * dt;
+            
+            this.telemetry.gps.lat += Math.cos(headingRad) * speedDeg;
+            this.telemetry.gps.lon += Math.sin(headingRad) * speedDeg;
+            
+            // Update marker
+            this.droneMarker?.setLatLng([this.telemetry.gps.lat, this.telemetry.gps.lon]);
+            
+            // Update path
+            this.flightPath.push([this.telemetry.gps.lat, this.telemetry.gps.lon]);
+            if (this.flightPath.length > 200) this.flightPath.shift();
+            this.pathPolyline?.setLatLngs(this.flightPath);
+            
+            // Attitude simulation
+            this.telemetry.roll = Math.sin(Date.now() / 3000) * 8;
+            this.telemetry.pitch = Math.sin(Date.now() / 3500) * 6;
+            
+            // Speed variation
+            this.telemetry.speed = 5 + Math.sin(Date.now() / 5000) * 3;
+            
+            // Battery drain
+            this.telemetry.battery.voltage -= 0.0003 * dt;
+            this.telemetry.battery.percent = Math.max(0, ((this.telemetry.battery.voltage - 14.0) / 2.8) * 100);
+            this.telemetry.battery.current = 18 + Math.random() * 4;
+            
+            // Distance calculation
+            const homeLat = this.homeMarker.getLatLng().lat;
+            const homeLon = this.homeMarker.getLatLng().lng;
+            this.telemetry.homeDistance = this.calculateDistance(
+                this.telemetry.gps.lat, this.telemetry.gps.lon,
+                homeLat, homeLon
+            );
+            
+            this.telemetry.distance += this.telemetry.speed * dt;
+        }
+        
+        // Update altitude history
+        this.altitudeHistory.shift();
+        this.altitudeHistory.push(this.telemetry.altitude);
+        if (this.altChart) {
+            this.altChart.data = [...this.altitudeHistory];
+        }
+    }
+    
+    calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371000; // Earth radius in meters
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
     
     updateDisplay() {
-        // Telemetry values
-        this.updateElement('altitude', this.telemetry.altitude.toFixed(1) + ' m');
-        this.updateElement('groundspeed', this.telemetry.groundspeed.toFixed(1) + ' m/s');
-        this.updateElement('climbrate', this.telemetry.climbrate.toFixed(1) + ' m/s');
-        this.updateElement('homeDistance', Math.round(this.telemetry.distance) + ' m');
-        this.updateElement('gpsSats', this.telemetry.gps.satellites);
+        // Telemetry bar
+        this.updateElement('tAlt', this.telemetry.altitude.toFixed(1) + ' m');
+        this.updateElement('tSpeed', this.telemetry.speed.toFixed(1) + ' m/s');
+        this.updateElement('tClimb', this.telemetry.climbRate.toFixed(1) + ' m/s');
+        this.updateElement('tDist', Math.round(this.telemetry.distance) + ' m');
+        this.updateElement('tHome', Math.round(this.telemetry.homeDistance) + ' m');
+        this.updateElement('tGPS', this.telemetry.gps.satellites);
+        this.updateElement('tHDOP', this.telemetry.gps.hdop.toFixed(1));
         
-        // Heading display
-        this.updateElement('headingDisplay', Math.round(this.telemetry.heading) + '°');
+        // Right panel instruments
+        this.updateElement('altMain', Math.round(this.telemetry.altitude));
+        this.updateElement('speedValue', Math.round(this.telemetry.speed));
+        this.updateElement('headingValue', Math.round(this.telemetry.heading) + '°');
+        this.updateElement('rollVal', this.telemetry.roll.toFixed(1) + '°');
+        this.updateElement('pitchVal', this.telemetry.pitch.toFixed(1) + '°');
+        
+        // HUD
+        this.updateElement('hudLat', this.telemetry.gps.lat.toFixed(6));
+        this.updateElement('hudLon', this.telemetry.gps.lon.toFixed(6));
+        this.updateElement('hudAlt', Math.round(this.telemetry.altitude) + ' m');
+        this.updateElement('hudSpd', this.telemetry.speed.toFixed(1) + ' m/s');
         
         // Battery
-        const batteryIcon = document.getElementById('batteryIcon');
-        const batteryVoltage = document.getElementById('batteryVoltage');
-        if (batteryIcon && batteryVoltage) {
-            batteryVoltage.textContent = this.telemetry.battery.voltage.toFixed(1) + 'V';
-            
-            if (this.telemetry.battery.percent < 20) {
-                batteryIcon.className = 'fas fa-battery-empty';
-                batteryIcon.style.color = '#dc3545';
-            } else if (this.telemetry.battery.percent < 50) {
-                batteryIcon.className = 'fas fa-battery-half';
-                batteryIcon.style.color = '#ffc107';
-            } else {
-                batteryIcon.className = 'fas fa-battery-full';
-                batteryIcon.style.color = '#28a745';
-            }
+        const battPercent = Math.max(0, Math.min(100, this.telemetry.battery.percent));
+        this.updateElement('battVolt', this.telemetry.battery.voltage.toFixed(1) + 'V');
+        
+        const battFill = document.getElementById('battFill');
+        const battIcon = document.getElementById('battIcon');
+        if (battFill) {
+            battFill.style.width = battPercent + '%';
+            battFill.classList.toggle('low', battPercent < 20);
+        }
+        if (battIcon) {
+            if (battPercent < 20) battIcon.className = 'fas fa-battery-empty';
+            else if (battPercent < 40) battIcon.className = 'fas fa-battery-quarter';
+            else if (battPercent < 60) battIcon.className = 'fas fa-battery-half';
+            else if (battPercent < 80) battIcon.className = 'fas fa-battery-three-quarters';
+            else battIcon.className = 'fas fa-battery-full';
         }
         
         // Flight time
-        if (this.flightStartTime) {
-            const elapsed = Math.floor((Date.now() - this.flightStartTime) / 1000);
-            const minutes = Math.floor(elapsed / 60);
-            const seconds = elapsed % 60;
-            this.updateElement('flightTime', 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        if (this.startTime) {
+            const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            this.updateElement('tTime', `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+        }
+        
+        // Speed gauge (SVG arc update)
+        const speedGauge = document.getElementById('speedGauge');
+        if (speedGauge) {
+            const maxSpeed = 20;
+            const angle = (this.telemetry.speed / maxSpeed) * 180;
+            const radians = (angle - 90) * Math.PI / 180;
+            const x = 60 + 50 * Math.cos(radians);
+            const y = 70 + 50 * Math.sin(radians);
+            const largeArc = angle > 180 ? 1 : 0;
+            speedGauge.setAttribute('d', `M10,70 A50,50 0 ${largeArc},1 ${x},${y}`);
         }
     }
     
     updateElement(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = value;
-        }
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
+    
+    startMainLoop() {
+        const loop = () => {
+            this.updateSimulation();
+            this.updateDisplay();
+            this.drawHorizon();
+            this.drawCompass();
+            this.drawAltitudeGraph();
+            requestAnimationFrame(loop);
+        };
+        loop();
     }
 }
 
-// Swap Views Function (Global)
-function swapViews() {
-    const mapContainer = document.getElementById('map-container');
-    const cameraContainer = document.getElementById('camera-container');
+// Global functions for UI interactions
+function toggleView() {
+    const mapView = document.getElementById('map-view');
+    const cameraView = document.getElementById('camera-view');
     
-    if (!mapContainer || !cameraContainer) return;
+    if (!mapView || !cameraView) return;
     
-    const isMapFullscreen = mapContainer.classList.contains('mode-fullscreen');
+    mapView.classList.toggle('pip-mode');
+    cameraView.classList.toggle('pip-mode');
     
-    if (isMapFullscreen) {
-        // Swap: Map to PIP, Camera to Fullscreen
-        mapContainer.classList.remove('mode-fullscreen');
-        mapContainer.classList.add('mode-pip');
-        
-        cameraContainer.classList.remove('mode-pip');
-        cameraContainer.classList.add('mode-fullscreen');
-        
-        // Update click handlers
-        cameraContainer.removeAttribute('onclick');
-        mapContainer.setAttribute('onclick', 'swapViews()');
-    } else {
-        // Swap: Camera to PIP, Map to Fullscreen
-        mapContainer.classList.remove('mode-pip');
-        mapContainer.classList.add('mode-fullscreen');
-        
-        cameraContainer.classList.remove('mode-fullscreen');
-        cameraContainer.classList.add('mode-pip');
-        
-        // Update click handlers
-        mapContainer.removeAttribute('onclick');
-        cameraContainer.setAttribute('onclick', 'swapViews()');
-    }
-    
-    // Invalidate map size after animation
+    // Refresh map after transition
     setTimeout(() => {
-        if (window.qgcApp && window.qgcApp.map) {
-            window.qgcApp.map.invalidateSize();
+        if (window.droneController?.map) {
+            window.droneController.map.invalidateSize();
         }
-    }, 500);
+    }, 600);
 }
 
-// Toggle Takeoff Slider (Global)
-function toggleTakeoffSlider() {
-    const slider = document.getElementById('takeoffSlider');
-    if (slider) {
-        slider.classList.toggle('show');
+function showTakeoffSlider() {
+    const modal = document.getElementById('takeoffModal');
+    if (modal) {
+        modal.classList.add('show');
         
-        // Reset thumb position
-        const thumb = document.getElementById('sliderThumb');
-        if (thumb) {
-            thumb.style.left = '0px';
+        // Reset slider
+        const handle = document.getElementById('sliderHandle');
+        if (handle) {
+            handle.style.left = '0px';
         }
     }
 }
 
-// Initialize app when DOM is ready
+function closeTakeoffSlider() {
+    const modal = document.getElementById('takeoffModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+// Click outside to close modal
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('takeoffModal');
+    if (modal && e.target === modal) {
+        closeTakeoffSlider();
+    }
+});
+
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Initializing QGroundControl...');
-    window.qgcApp = new QGroundControl();
+    console.log('🎯 QGroundControl Next Gen - Initializing...');
+    window.droneController = new DroneController();
+});
+
+// Add PIP click handler
+document.addEventListener('DOMContentLoaded', () => {
+    const mapView = document.getElementById('map-view');
+    const cameraView = document.getElementById('camera-view');
+    
+    if (mapView && cameraView) {
+        mapView.addEventListener('click', (e) => {
+            if (mapView.classList.contains('pip-mode')) {
+                toggleView();
+            }
+        });
+        
+        cameraView.addEventListener('click', (e) => {
+            if (cameraView.classList.contains('pip-mode')) {
+                toggleView();
+            }
+        });
+    }
 });
