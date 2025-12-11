@@ -1,24 +1,24 @@
-# QGroundControl - Next Generation
+# Drone Ground Control - DJI Agras Style
 
-🚀 Web tabanlı, futuristik, yeni nesil drone kontrol istasyonu. Profesyonel pilotlar için tasarlanmış advanced telemetri ve kontrol sistemi.
+🚁 Web tabanlı, DJI Agras T100 stilinde profesyonel drone kontrol istasyonu. Minimalist, kompakt ve ekran-verimli tasarım.
 
-## ✨ Özellikler
+## ✨ DJI Agras Stil Özellikleri
 
-### 🎨 Futuristik Arayüz
-- **Glassmorphism Design** - Modern cam efekti, backdrop blur
-- **Neon Accents** - Cyan-purple gradient tema, glow efektleri
-- **Smooth Animations** - 60 FPS akıcı geçişler
-- **HUD Overlay** - Gerçek zamanlı bilgi katmanı
-- **Dynamic Lighting** - Pulse ve glow animasyonlar
-- **Professional Layout** - Command bar, sidebars, telemetri barı
+### 🎨 Minimalist & Kompakt Tasarım
+- **DJI Design Language** - Temiz, profesyonel, minimal
+- **Ultra-thin Bars** - İnce üst/alt barlar (42px/50px)
+- **Floating Widgets** - Transparan mini paneller
+- **Maximum Map Space** - %90+ harita görünümü
+- **Icon-First UI** - Az metin, çok icon
+- **Backdrop Blur** - Gerçek glassmorphism efekti
 
-### 🛰️ Gelişmiş Görüntüleme
-- **Dual View System** - Harita ve kamera arasında instant swap
-- **PIP Mode** - Picture-in-Picture küçük pencere
-- **Satellite Imagery** - ArcGIS uydu haritası
-- **Flight Path Tracking** - Uçuş rotası çizimi
-- **Live Camera Feed** - Simülasyon kamera görüntüsü
-- **Smart Zoom** - Otomatik harita zoom kontrolü
+### 🗺️ Ekran Verimliliği
+- **Full Screen Map** - Harita tam ekran dominant
+- **Smart PIP** - Küçük kamera penceresi (200x112px)
+- **Compact Instruments** - 100-140px genişlik paneller
+- **Minimal Padding** - Sıkı yerleşim, sıfır boşluk kaybı
+- **Overlay Telemetry** - Haritanın üzerinde veri gösterimi
+- **Auto-hide Elements** - Gereksiz UI elemanları gizli
 
 ### Telemetri & Kontrol
 - 📡 Gerçek zamanlı telemetri gösterimi
@@ -70,23 +70,23 @@
 ## 🛠️ Teknolojiler
 
 ### Core Stack
-- **HTML5** - Semantic markup, Canvas API
-- **CSS3** - Glassmorphism, backdrop-filter, CSS Grid/Flexbox, animations
-- **JavaScript ES6+** - Classes, async/await, requestAnimationFrame
-- **Canvas 2D API** - Gerçek zamanlı instrument rendering
+- **HTML5** - Minimal semantic markup
+- **CSS3** - DJI-style glassmorphism, backdrop-filter
+- **JavaScript ES6+** - OOP, Canvas rendering
+- **Canvas 2D API** - Real-time instruments
 
-### Libraries & APIs
-- **Leaflet.js 1.9.4** - İnteraktif harita motoru
-- **Font Awesome 6.4.0** - Icon set
-- **ArcGIS World Imagery** - Satellite tile server
-- **Chart.js 4.4.0** - Telemetry graphs (hazır)
+### Libraries
+- **Leaflet.js 1.9.4** - Interactive mapping
+- **Font Awesome 6.4.0** - Professional icons
+- **ArcGIS Satellite** - High-res imagery
 
-### Design Principles
-- **Glassmorphism** - Translucent surfaces, blur effects
-- **Neumorphism Elements** - Soft shadows
-- **Neon Accents** - Glow effects, vibrant colors
-- **60 FPS Animations** - Smooth transitions
-- **Mobile First** - Touch optimized
+### Design System (DJI Agras Inspired)
+- **Colors**: #0084ff (primary), #00d56a (green), #ff3b30 (red)
+- **Fonts**: SF Pro Display, SF Mono (fallback: system fonts)
+- **Spacing**: 8px base grid system
+- **Borders**: 1px solid rgba(255,255,255,0.15)
+- **Shadows**: Soft, minimal drop shadows
+- **Blur**: 20px backdrop blur for panels
 
 ## 📱 Tarayıcı Desteği
 
@@ -156,18 +156,40 @@ Uygulama tam özellikli simülasyon modunda çalışır:
 - [ ] **Cloud Sync** - Mission backup, sharing
 - [ ] **Analytics** - Flight statistics, heatmaps
 
-## 📸 Screenshots
+## 📸 DJI Agras Style Layout
 
 ### Main Interface
-- Full-screen satellite map
-- PIP camera view
-- Real-time instruments
-- Bottom telemetry bar
+```
+┌────────────────────────────────────────────────────┐
+│ [LOGO] [STATUS]  [MODES]  [BATTERY] [ARM]      42px│
+├─┬──────────────────────────────────────────────┬─┬─┤
+│F│                                              │I│C│
+│L│                                              │N│A│
+│Y│           FULL SCREEN MAP                    │S│M│
+│ │                                              │T│ │
+│P│          (90% screen space)                  │R│P│
+│L│                                              │U│I│
+│A│                                              │M│P│
+│N│                                              │E│ │
+│ │                                              │N│ │
+│T│                                              │T│2│
+│A│                                              │S│0│
+│K│                                              │ │0│
+│E│                                              │ │x│
+│ │                                              │1│1│
+│ │                                              │4│1│
+│ │                                              │0│2│
+├─┴──────────────────────────────────────────────┴─┴─┤
+│ [ALT] [SPEED] [V/S] [DIST] [HOME] [GPS] [STS] 50px│
+└────────────────────────────────────────────────────┘
+```
 
-### Dark Theme
-- Futuristic neon accents
-- Glassmorphism panels
-- Glowing indicators
+### Features
+- **Top Bar**: Ultra-thin (42px), minimal controls
+- **Left Panel**: 48px wide, floating widgets
+- **Right Panel**: 140px instruments, auto-hide speed/alt on small screens
+- **Bottom Bar**: 50px, essential telemetry only
+- **Map**: Dominant, 90%+ screen coverage
 
 ## ⚡ Performance
 
@@ -213,24 +235,27 @@ MIT License - Eğitim, geliştirme ve ticari kullanım için özgür.
 - **ArcGIS** - Satellite imagery tiles
 - **Modern UI Design** - Glassmorphism, neumorphism trends
 
-## ⚙️ Yeni Özellikler
+## 🎯 DJI Agras Inspired Features
 
-### Collapsible Panels
-- **Toggle Butonları** - Sol ve sağ kenar butonları ile panelleri gizle/göster
-- **Otomatik Gizleme** - Küçük ekranlarda HUD ve bazı paneller otomatik gizlenir
-- **Smooth Animasyonlar** - Panel geçişleri akıcı
+### Space Efficiency
+- **90%+ Map Coverage** - Maksimum harita alanı
+- **Compact Instruments** - 100-140px dar paneller
+- **Thin Bars** - 42px üst, 50px alt bar
+- **Floating Mini Widgets** - Overlay paneller
+- **Smart Auto-hide** - Gereksiz elemanlar gizli
 
-### Responsive Design
-- **1600px+** - Tam özellikli görünüm
-- **1400px-1600px** - HUD gizli, speed panel kapalı
-- **1280px-1400px** - Kompakt mod, bazı metinler gizli
-- **1024px-1280px** - Ultra kompakt, minimal UI
-- **<1024px** - Kritik bilgiler only
+### Professional UI
+- **DJI Color Palette** - #0084ff (mavi), #00d56a (yeşil), #ff3b30 (kırmızı)
+- **SF Pro Display Font** - Apple system font
+- **Monospace Numbers** - SF Mono ile telemetri
+- **Icon-First Design** - 48x48px butonlar, minimal metin
+- **Smooth Transitions** - 200-400ms cubic-bezier
 
-### Font Scaling
-- Ekran boyutuna göre dinamik font boyutları
-- Responsive icon ve button boyutları
-- Otomatik layout ayarlamaları
+### Responsive & Adaptive
+- **1600px+** - Full featured view
+- **1280px-1600px** - Compact mode
+- **<1280px** - Ultra minimal
+- **Auto-adjust** - Ekran boyutuna göre dinamik
 
 ---
 
