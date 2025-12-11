@@ -650,6 +650,60 @@ class DroneController {
     }
 }
 
+// Sidebar toggle states
+let leftSidebarVisible = true;
+let rightSidebarVisible = true;
+
+// Toggle Left Sidebar
+function toggleLeftSidebar() {
+    leftSidebarVisible = !leftSidebarVisible;
+    const sidebar = document.querySelector('.sidebar-left');
+    const toggle = document.getElementById('toggleLeft');
+    const icon = toggle.querySelector('i');
+    
+    if (leftSidebarVisible) {
+        sidebar.classList.remove('collapsed');
+        toggle.classList.remove('active');
+        icon.className = 'fas fa-chevron-right';
+    } else {
+        sidebar.classList.add('collapsed');
+        toggle.classList.add('active');
+        icon.className = 'fas fa-chevron-left';
+    }
+}
+
+// Toggle Right Sidebar
+function toggleRightSidebar() {
+    rightSidebarVisible = !rightSidebarVisible;
+    const sidebar = document.querySelector('.sidebar-right');
+    const toggle = document.getElementById('toggleRight');
+    const icon = toggle.querySelector('i');
+    
+    if (rightSidebarVisible) {
+        sidebar.classList.remove('collapsed');
+        toggle.classList.remove('active');
+        icon.className = 'fas fa-chevron-left';
+    } else {
+        sidebar.classList.add('collapsed');
+        toggle.classList.add('active');
+        icon.className = 'fas fa-chevron-right';
+    }
+}
+
+// Auto-hide HUD on small screens
+function checkScreenSize() {
+    const hudLeft = document.querySelector('.hud-left');
+    const hudRight = document.querySelector('.hud-right');
+    
+    if (window.innerWidth < 1400) {
+        hudLeft?.classList.add('hidden');
+        hudRight?.classList.add('hidden');
+    } else {
+        hudLeft?.classList.remove('hidden');
+        hudRight?.classList.remove('hidden');
+    }
+}
+
 // Global functions for UI interactions
 function toggleView() {
     const mapView = document.getElementById('map-view');
@@ -700,6 +754,10 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🎯 QGroundControl Next Gen - Initializing...');
     window.droneController = new DroneController();
+    
+    // Check screen size on load and resize
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
 });
 
 // Add PIP click handler

@@ -213,6 +213,25 @@ MIT License - Eğitim, geliştirme ve ticari kullanım için özgür.
 - **ArcGIS** - Satellite imagery tiles
 - **Modern UI Design** - Glassmorphism, neumorphism trends
 
+## ⚙️ Yeni Özellikler
+
+### Collapsible Panels
+- **Toggle Butonları** - Sol ve sağ kenar butonları ile panelleri gizle/göster
+- **Otomatik Gizleme** - Küçük ekranlarda HUD ve bazı paneller otomatik gizlenir
+- **Smooth Animasyonlar** - Panel geçişleri akıcı
+
+### Responsive Design
+- **1600px+** - Tam özellikli görünüm
+- **1400px-1600px** - HUD gizli, speed panel kapalı
+- **1280px-1400px** - Kompakt mod, bazı metinler gizli
+- **1024px-1280px** - Ultra kompakt, minimal UI
+- **<1024px** - Kritik bilgiler only
+
+### Font Scaling
+- Ekran boyutuna göre dinamik font boyutları
+- Responsive icon ve button boyutları
+- Otomatik layout ayarlamaları
+
 ---
 
 **Built with ❤️ for the drone community**
