@@ -31,12 +31,6 @@ body, html {
     -webkit-font-smoothing: antialiased;
 }
 
-body {
-    zoom: 0.5;
-    -moz-transform: scale(0.5);
-    -moz-transform-origin: 0 0;
-}
-
 /* === ORIENTATION WARNING === */
 #orientation-warning {
     display: none;
@@ -128,14 +122,14 @@ body {
 }
 
 .main-view.pip-mode {
-    bottom: 100px;
+    bottom: 75px;
     left: 100px;
     top: auto;
     right: auto;
-    width: 320px;
-    height: 180px;
+    width: 280px;
+    height: 157px;
     border: 3px solid var(--primary-cyan);
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: 0 8px 32px rgba(0, 212, 255, 0.5), 0 0 60px rgba(0, 212, 255, 0.2);
     cursor: pointer;
     z-index: 100;
@@ -185,14 +179,14 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 70px;
+    height: 55px;
     background: linear-gradient(180deg, rgba(10, 14, 26, 0.95) 0%, rgba(10, 14, 26, 0.8) 100%);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 25px;
+    padding: 0 15px;
     z-index: 1000;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
@@ -200,25 +194,25 @@ body {
 .cmd-left, .cmd-center, .cmd-right {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 12px;
 }
 
 /* Brand */
 .qgc-brand {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 .brand-icon {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
     box-shadow: var(--shadow-glow);
     animation: brandPulse 3s ease-in-out infinite;
 }
@@ -233,29 +227,29 @@ body {
 }
 
 .brand-name {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
 }
 
 .brand-sub {
-    font-size: 10px;
+    font-size: 8px;
     color: var(--primary-cyan);
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 /* Connection Badge */
 .connection-badge {
-    padding: 10px 20px;
+    padding: 8px 14px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 25px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 13px;
+    gap: 8px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .badge-dot {
@@ -283,23 +277,23 @@ body {
 }
 
 .mode-option {
-    padding: 10px 18px;
+    padding: 8px 14px;
     background: transparent;
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    border-radius: 8px;
-    font-size: 12px;
+    border-radius: 6px;
+    font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.5px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mode-option i {
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .mode-option:hover {
@@ -316,29 +310,29 @@ body {
 /* System Status */
 .sys-status {
     display: flex;
-    gap: 15px;
+    gap: 10px;
 }
 
 .status-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 15px;
+    gap: 6px;
+    padding: 6px 12px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 600;
 }
 
 .status-item i {
     color: var(--primary-cyan);
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .battery-status {
     position: relative;
-    min-width: 100px;
+    min-width: 80px;
 }
 
 .battery-bar {
@@ -365,18 +359,18 @@ body {
 
 /* ARM Button */
 .arm-button {
-    padding: 12px 24px;
+    padding: 10px 18px;
     background: linear-gradient(135deg, var(--accent-green), #00cc70);
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     color: white;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4);
     transition: all 0.3s;
 }
@@ -396,13 +390,13 @@ body {
 }
 
 .settings-btn {
-    width: 45px;
-    height: 45px;
+    width: 38px;
+    height: 38px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 10px;
+    border-radius: 8px;
     color: var(--text-primary);
-    font-size: 18px;
+    font-size: 16px;
     cursor: pointer;
     transition: all 0.3s;
 }
@@ -415,32 +409,32 @@ body {
 /* === SIDEBARS === */
 .sidebar-left, .sidebar-right {
     position: absolute;
-    top: 90px;
+    top: 70px;
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    border-radius: 15px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 12px;
     z-index: 900;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .sidebar-left {
-    left: 20px;
-    bottom: 120px;
-    width: 100px;
+    left: 15px;
+    bottom: 90px;
+    width: 75px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
 }
 
 .sidebar-right {
-    right: 20px;
-    bottom: 120px;
-    width: 240px;
+    right: 15px;
+    bottom: 90px;
+    width: 200px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     overflow-y: auto;
     scrollbar-width: thin;
 }
@@ -453,25 +447,25 @@ body {
 }
 
 .nav-tool {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     background: transparent;
     border: 1px solid var(--glass-border);
-    border-radius: 10px;
+    border-radius: 8px;
     color: var(--text-secondary);
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     transition: all 0.3s;
 }
 
 .nav-tool i {
-    font-size: 20px;
+    font-size: 16px;
 }
 
 .nav-tool:hover {
@@ -497,25 +491,25 @@ body {
 }
 
 .action-btn {
-    width: 60px;
-    height: 45px;
+    width: 50px;
+    height: 38px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 8px;
+    border-radius: 6px;
     color: var(--text-primary);
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     transition: all 0.3s;
 }
 
 .action-btn i {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .action-btn.takeoff:hover {
@@ -577,16 +571,16 @@ body {
 .instrument-panel {
     background: rgba(15, 20, 35, 0.6);
     border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    padding: 15px;
+    border-radius: 10px;
+    padding: 10px;
 }
 
 .panel-title {
-    font-size: 10px;
+    font-size: 8px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     color: var(--text-secondary);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     text-align: center;
 }
 
@@ -596,6 +590,8 @@ body {
     margin: 0 auto;
     border-radius: 50%;
     box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+    width: 160px !important;
+    height: 160px !important;
 }
 
 .attitude-values {
@@ -629,6 +625,8 @@ body {
     display: block;
     margin: 0 auto;
     border-radius: 50%;
+    width: 140px !important;
+    height: 140px !important;
 }
 
 .heading-value {
@@ -636,7 +634,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--accent-yellow);
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
@@ -646,11 +644,11 @@ body {
 /* Altimeter */
 .alt-display {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .alt-main {
-    font-size: 36px;
+    font-size: 28px;
     font-weight: 700;
     color: var(--accent-green);
     font-family: 'Courier New', monospace;
@@ -658,7 +656,7 @@ body {
 }
 
 .alt-unit {
-    font-size: 11px;
+    font-size: 9px;
     color: var(--text-secondary);
 }
 
@@ -683,7 +681,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--primary-cyan);
     font-family: 'Courier New', monospace;
@@ -691,7 +689,7 @@ body {
 
 .speed-unit {
     margin-top: -10px;
-    font-size: 11px;
+    font-size: 9px;
     color: var(--text-secondary);
 }
 
@@ -701,57 +699,57 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 90px;
+    height: 65px;
     background: linear-gradient(0deg, rgba(10, 14, 26, 0.95) 0%, rgba(10, 14, 26, 0.8) 100%);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding: 0 30px;
+    padding: 0 20px;
     z-index: 1000;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .telem-group {
     display: flex;
-    gap: 25px;
+    gap: 15px;
 }
 
 .telem-widget {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .telem-icon {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     background: rgba(0, 212, 255, 0.1);
     border: 1px solid var(--glass-border);
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 14px;
     color: var(--primary-cyan);
 }
 
 .telem-data {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
 }
 
 .telem-label {
-    font-size: 9px;
+    font-size: 8px;
     color: var(--text-secondary);
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     font-weight: 600;
 }
 
 .telem-value {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--text-primary);
     font-family: 'Courier New', monospace;
@@ -760,12 +758,12 @@ body {
 .gps-value {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 6px;
+    font-size: 12px;
 }
 
 .gps-hdop {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-secondary);
 }
 
@@ -877,62 +875,64 @@ body {
 /* HUD Info Boxes */
 .hud-left, .hud-right {
     position: absolute;
-    top: 30px;
+    top: 20px;
 }
 
-.hud-left { left: 140px; }
-.hud-right { right: 280px; }
+.hud-left { left: 100px; }
+.hud-right { right: 230px; }
 
 .hud-info-box {
     background: rgba(10, 14, 26, 0.8);
     backdrop-filter: blur(15px);
     border: 1px solid var(--glass-border);
-    border-radius: 10px;
-    padding: 15px;
-    min-width: 200px;
+    border-radius: 8px;
+    padding: 12px;
+    min-width: 160px;
 }
 
 .hud-label {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-secondary);
     font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
 }
 
 .hud-coord, .hud-data-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 6px;
-    font-size: 13px;
+    margin-bottom: 5px;
+    font-size: 11px;
 }
 
 .hud-coord span, .hud-data-row span {
     color: var(--text-secondary);
+    font-size: 10px;
 }
 
 .hud-coord strong, .hud-data-row strong {
     color: var(--primary-cyan);
     font-family: 'Courier New', monospace;
+    font-size: 11px;
 }
 
 /* === VIEW SWITCHER === */
 .view-switcher {
     position: absolute;
-    bottom: 110px;
-    right: 30px;
+    bottom: 80px;
+    right: 20px;
     z-index: 1100;
 }
 
 .view-switch-btn {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border: 2px solid var(--primary-cyan);
     border-radius: 50%;
     color: var(--primary-cyan);
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
     transition: all 0.3s;
