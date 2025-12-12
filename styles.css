@@ -1,15 +1,14 @@
 :root {
-    --dji-primary: #0084ff;
-    --dji-green: #00d56a;
+    --dji-blue: #0084ff;
+    --dji-green: #00ff88;
     --dji-red: #ff3b30;
     --dji-yellow: #ffc107;
-    --dji-bg: rgba(0, 0, 0, 0.75);
-    --dji-panel: rgba(20, 25, 35, 0.85);
-    --dji-border: rgba(255, 255, 255, 0.15);
-    --dji-text: #ffffff;
-    --dji-text-dim: #b0b8c5;
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.5);
+    --dji-orange: #ff9500;
+    --dji-bg: #1a1a1a;
+    --dji-panel: rgba(30, 30, 35, 0.95);
+    --dji-border: rgba(255, 255, 255, 0.08);
+    --text-primary: #ffffff;
+    --text-secondary: #8e8e93;
 }
 
 * {
@@ -22,34 +21,32 @@ body, html {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: #000;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-    color: var(--dji-text);
+    background: var(--dji-bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-primary);
     user-select: none;
-    -webkit-font-smoothing: antialiased;
 }
 
-/* === ORIENTATION WARNING === */
+/* Orientation Warning */
 #orientation-warning {
     display: none;
     position: fixed;
     inset: 0;
-    background: linear-gradient(135deg, #000 0%, #1a1a2e 100%);
+    background: #000;
     z-index: 99999;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    text-align: center;
     gap: 20px;
 }
 
 .warning-content i {
     font-size: 60px;
-    color: var(--dji-primary);
-    animation: rotateDevice 2s ease-in-out infinite;
+    color: var(--dji-blue);
+    animation: rotate 2s ease-in-out infinite;
 }
 
-@keyframes rotateDevice {
+@keyframes rotate {
     0%, 100% { transform: rotate(0deg); }
     50% { transform: rotate(10deg); }
 }
@@ -59,67 +56,452 @@ body, html {
     #app { display: none !important; }
 }
 
-/* === MAIN APP === */
+/* Main App Layout */
 #app {
-    position: relative;
-    width: 100vw;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: 48px 1fr;
     height: 100vh;
-    overflow: hidden;
+    width: 100vw;
 }
 
-/* === MAP & CAMERA VIEWS === */
-.main-view {
-    position: absolute;
-    inset: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+/* Top Bar */
+.command-bar {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--dji-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
 }
 
-#map-view {
-    background: #1a1a1a;
-    z-index: 1;
+.cmd-left, .cmd-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-#camera-view {
-    background: linear-gradient(135deg, #2d3561 0%, #1a1f38 100%);
-    background-image: url('https://picsum.photos/1920/1080?random=2');
-    background-size: cover;
-    background-position: center;
-    z-index: 0;
+/* Brand */
+.qgc-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.main-view.pip-mode {
-    top: 50px;
-    right: 15px;
-    left: auto;
-    bottom: auto;
-    width: 200px;
-    height: 112px;
-    border: 2px solid var(--dji-primary);
+.brand-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--dji-blue);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.brand-name {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.brand-sub {
+    display: none;
+}
+
+/* Flight Mode */
+.flight-mode {
+    padding: 6px 16px;
+    background: var(--dji-blue);
     border-radius: 6px;
-    box-shadow: var(--shadow-lg);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Status Bar Items */
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-item i {
+    font-size: 14px;
+    color: var(--dji-green);
+}
+
+/* ARM Button */
+.arm-button {
+    padding: 8px 20px;
+    background: var(--dji-green);
+    border: none;
+    border-radius: 6px;
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.2s;
+}
+
+.arm-button:hover {
+    transform: scale(1.05);
+}
+
+.arm-button.armed {
+    background: var(--dji-red);
+    color: white;
+}
+
+/* Left Telemetry Panel */
+.sidebar-left {
+    grid-column: 1;
+    grid-row: 2;
+    background: var(--dji-panel);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--dji-border);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     z-index: 100;
 }
 
-.main-view.pip-mode:hover {
+.sidebar-left::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-left::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* Panel Sections */
+.panel-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--dji-border);
+}
+
+.section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+/* Telemetry Grid */
+.telem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.telem-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--dji-border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.telem-card-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.telem-card-icon i {
+    font-size: 18px;
+    color: var(--dji-blue);
+}
+
+.telem-card-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.telem-card-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'SF Mono', 'Courier New', monospace;
+    line-height: 1;
+}
+
+.telem-card-unit {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-left: 4px;
+}
+
+/* Colored Values */
+.telem-card.altitude .telem-card-icon i,
+.telem-card.altitude .telem-card-value {
+    color: var(--dji-green);
+}
+
+.telem-card.speed .telem-card-icon i,
+.telem-card.speed .telem-card-value {
+    color: var(--dji-blue);
+}
+
+.telem-card.battery .telem-card-icon i,
+.telem-card.battery .telem-card-value {
+    color: var(--dji-green);
+}
+
+.telem-card.battery.warning .telem-card-icon i,
+.telem-card.battery.warning .telem-card-value {
+    color: var(--dji-yellow);
+}
+
+.telem-card.battery.critical .telem-card-icon i,
+.telem-card.battery.critical .telem-card-value {
+    color: var(--dji-red);
+}
+
+.telem-card.gps .telem-card-icon i,
+.telem-card.gps .telem-card-value {
+    color: var(--dji-orange);
+}
+
+/* Battery Progress */
+.battery-progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.battery-fill {
+    height: 100%;
+    background: var(--dji-green);
+    transition: width 0.3s, background 0.3s;
+}
+
+.battery-fill.warning {
+    background: var(--dji-yellow);
+}
+
+.battery-fill.critical {
+    background: var(--dji-red);
+}
+
+/* Attitude Indicator */
+.attitude-section {
+    padding: 15px 20px;
+}
+
+.attitude-display {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.attitude-display canvas {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.attitude-values {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+.attitude-value {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--dji-border);
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+}
+
+.attitude-value-label {
+    font-size: 9px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.attitude-value-number {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dji-blue);
+    font-family: 'SF Mono', monospace;
+}
+
+/* Compass */
+.compass-section {
+    padding: 15px 20px;
+    text-align: center;
+}
+
+.compass-display {
+    position: relative;
+    display: inline-block;
+}
+
+.compass-display canvas {
+    border-radius: 50%;
+}
+
+.compass-heading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dji-yellow);
+    font-family: 'SF Mono', monospace;
+}
+
+/* Action Buttons */
+.action-section {
+    padding: 15px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.action-btn {
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--dji-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.action-btn i {
+    font-size: 20px;
+}
+
+.action-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: var(--dji-blue);
+    transform: translateY(-2px);
+}
+
+.action-btn.takeoff {
+    grid-column: 1 / -1;
+    background: var(--dji-green);
+    color: #000;
     border-color: var(--dji-green);
-    transform: scale(1.02);
+}
+
+.action-btn.takeoff:hover {
+    background: #00dd77;
+}
+
+.action-btn.emergency {
+    background: rgba(255, 59, 48, 0.2);
+    border-color: var(--dji-red);
+    color: var(--dji-red);
+}
+
+/* GPS Info */
+.gps-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gps-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+
+.gps-row-label {
+    color: var(--text-secondary);
+}
+
+.gps-row-value {
+    font-weight: 700;
+    font-family: 'SF Mono', monospace;
+    color: var(--dji-orange);
+}
+
+/* Map Container */
+#map-view {
+    grid-column: 2;
+    grid-row: 2;
+    position: relative;
+    background: var(--dji-bg);
+}
+
+#map-container {
+    width: 100%;
+    height: 100%;
+}
+
+/* Camera PIP */
+#camera-view {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 280px;
+    height: 157px;
+    background: linear-gradient(135deg, #2d3561 0%, #1a1f38 100%);
+    background-image: url('https://picsum.photos/560/315?random=3');
+    background-size: cover;
+    background-position: center;
+    border: 2px solid var(--dji-blue);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 50;
+    overflow: hidden;
+}
+
+#camera-view:hover {
+    transform: scale(1.03);
+    border-color: var(--dji-green);
 }
 
 .live-indicator {
     position: absolute;
-    top: 8px;
-    left: 8px;
+    top: 10px;
+    left: 10px;
     background: var(--dji-red);
     padding: 4px 10px;
     border-radius: 12px;
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.5px;
     display: flex;
     align-items: center;
     gap: 6px;
-    z-index: 10;
 }
 
 .live-indicator span {
@@ -127,601 +509,20 @@ body, html {
     height: 6px;
     background: white;
     border-radius: 50%;
-    animation: livePulse 1.5s ease infinite;
+    animation: blink 1.5s ease infinite;
 }
 
-@keyframes livePulse {
+@keyframes blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
 }
 
-/* === TOP BAR (DJI Style) === */
-.command-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 42px;
-    background: var(--dji-bg);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--dji-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 15px;
-    z-index: 1000;
-}
-
-.cmd-left, .cmd-center, .cmd-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Brand - DJI Style */
-.qgc-brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.brand-icon {
-    width: 28px;
-    height: 28px;
-    background: var(--dji-primary);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-}
-
-.brand-text {
-    line-height: 1.1;
-}
-
-.brand-name {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-.brand-sub {
-    font-size: 8px;
-    color: var(--dji-text-dim);
-    letter-spacing: 0.5px;
-}
-
-.connection-badge {
-    padding: 5px 12px;
-    background: var(--dji-panel);
-    border: 1px solid var(--dji-border);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--dji-green);
-    box-shadow: 0 0 8px var(--dji-green);
-    animation: dotPulse 2s ease infinite;
-}
-
-@keyframes dotPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-/* Mode Selector - Compact */
-.mode-selector {
-    display: flex;
-    gap: 4px;
-    background: var(--dji-panel);
-    border: 1px solid var(--dji-border);
-    border-radius: 8px;
-    padding: 3px;
-}
-
-.mode-option {
-    padding: 6px 12px;
-    background: transparent;
-    border: none;
-    color: var(--dji-text-dim);
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 10px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.2s;
-}
-
-.mode-option i {
-    font-size: 11px;
-}
-
-.mode-option:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--dji-text);
-}
-
-.mode-option.active {
-    background: var(--dji-primary);
-    color: white;
-}
-
-/* Status Items */
-.sys-status {
-    display: flex;
-    gap: 8px;
-}
-
-.status-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    background: var(--dji-panel);
-    border: 1px solid var(--dji-border);
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.status-item i {
-    color: var(--dji-primary);
-    font-size: 12px;
-}
-
-.battery-status {
-    position: relative;
-    min-width: 70px;
-}
-
-.battery-bar {
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 0 0 6px 6px;
-}
-
-.battery-fill {
-    height: 100%;
-    background: var(--dji-green);
-    width: 85%;
-    transition: width 0.3s, background 0.3s;
-}
-
-.battery-fill.low {
-    background: var(--dji-red);
-}
-
-/* ARM Button - DJI Style */
-.arm-button {
-    padding: 8px 16px;
-    background: var(--dji-green);
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.3s;
-}
-
-.arm-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 213, 106, 0.4);
-}
-
-.arm-button.armed {
-    background: var(--dji-red);
-}
-
-.settings-btn {
-    width: 32px;
-    height: 32px;
-    background: var(--dji-panel);
-    border: 1px solid var(--dji-border);
-    border-radius: 6px;
-    color: var(--dji-text);
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.settings-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* === FLOATING WIDGETS (DJI Style) === */
-
-/* Left Mini Panel */
-.sidebar-left {
-    position: absolute;
-    left: 15px;
-    top: 60px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 900;
-}
-
-.mini-widget {
-    background: var(--dji-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--dji-border);
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s;
-}
-
-.mini-widget:hover {
-    background: rgba(0, 0, 0, 0.85);
-    border-color: var(--dji-primary);
-}
-
-/* Quick Actions */
-.nav-tools {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.nav-tool {
-    width: 48px;
-    height: 48px;
-    background: var(--dji-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--dji-border);
-    border-radius: 8px;
-    color: var(--dji-text-dim);
-    font-size: 7px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    transition: all 0.2s;
-}
-
-.nav-tool i {
-    font-size: 16px;
-}
-
-.nav-tool:hover {
-    background: rgba(0, 0, 0, 0.9);
-    border-color: var(--dji-primary);
-    color: var(--dji-text);
-}
-
-.nav-tool.active {
-    background: var(--dji-primary);
-    color: white;
-    border-color: var(--dji-primary);
-}
-
-/* Action Panel */
-.action-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.action-btn {
-    width: 48px;
-    height: 40px;
-    background: var(--dji-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--dji-border);
-    border-radius: 6px;
-    color: var(--dji-text);
-    font-size: 7px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    transition: all 0.2s;
-}
-
-.action-btn i {
-    font-size: 14px;
-}
-
-.action-btn.takeoff:hover {
-    background: rgba(0, 213, 106, 0.2);
-    border-color: var(--dji-green);
-    color: var(--dji-green);
-}
-
-.action-btn.land:hover {
-    background: rgba(0, 132, 255, 0.2);
-    border-color: var(--dji-primary);
-    color: var(--dji-primary);
-}
-
-.action-btn.emergency:hover {
-    background: rgba(255, 59, 48, 0.2);
-    border-color: var(--dji-red);
-    color: var(--dji-red);
-}
-
-/* Right Instruments Panel - DJI Compact Style */
-.sidebar-right {
-    position: absolute;
-    right: 15px;
-    top: 60px;
-    bottom: 65px;
-    width: 140px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-    scrollbar-width: none;
-    z-index: 900;
-}
-
-.sidebar-right::-webkit-scrollbar {
-    display: none;
-}
-
-.instrument-panel {
-    background: var(--dji-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--dji-border);
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: var(--shadow-sm);
-}
-
-.panel-title {
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: var(--dji-text-dim);
-    margin-bottom: 8px;
-    text-align: center;
-}
-
-/* Horizon - Compact */
-.horizon-panel canvas {
-    display: block;
-    margin: 0 auto;
-    border-radius: 50%;
-    width: 100px !important;
-    height: 100px !important;
-}
-
-.attitude-values {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 6px;
-}
-
-.att-val {
-    text-align: center;
-}
-
-.att-val span {
-    display: block;
-    font-size: 7px;
-    color: var(--dji-text-dim);
-    margin-bottom: 2px;
-}
-
-.att-val strong {
-    font-size: 11px;
-    color: var(--dji-primary);
-    font-family: 'SF Mono', 'Courier New', monospace;
-}
-
-/* Compass - Compact */
-.compass-panel {
-    position: relative;
-}
-
-.compass-panel canvas {
-    display: block;
-    margin: 0 auto;
-    border-radius: 50%;
-    width: 90px !important;
-    height: 90px !important;
-}
-
-.heading-value {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--dji-yellow);
-    font-family: 'SF Mono', 'Courier New', monospace;
-}
-
-/* Altimeter - Minimal */
-.alt-panel {
-    text-align: center;
-}
-
-.alt-display {
-    margin-bottom: 6px;
-}
-
-.alt-main {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--dji-green);
-    font-family: 'SF Mono', 'Courier New', monospace;
-}
-
-.alt-unit {
-    font-size: 8px;
-    color: var(--dji-text-dim);
-    margin-top: -2px;
-}
-
-.alt-graph canvas {
-    width: 100%;
-    height: 40px;
-}
-
-/* Speed Gauge - Minimal */
-.speed-panel {
-    text-align: center;
-}
-
-.speed-gauge svg {
-    width: 100%;
-    height: 50px;
-}
-
-.speed-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--dji-primary);
-    font-family: 'SF Mono', 'Courier New', monospace;
-}
-
-.speed-unit {
-    font-size: 8px;
-    color: var(--dji-text-dim);
-}
-
-/* === BOTTOM TELEMETRY BAR (DJI Compact) === */
-.telemetry-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 50px;
-    background: var(--dji-bg);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--dji-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 15px;
-    z-index: 1000;
-}
-
-.telem-group {
-    display: flex;
-    gap: 12px;
-}
-
-.telem-widget {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.telem-icon {
-    width: 28px;
-    height: 28px;
-    background: rgba(0, 132, 255, 0.15);
-    border: 1px solid rgba(0, 132, 255, 0.3);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: var(--dji-primary);
-}
-
-.telem-data {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.telem-label {
-    font-size: 8px;
-    color: var(--dji-text-dim);
-    letter-spacing: 0.3px;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.telem-value {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--dji-text);
-    font-family: 'SF Mono', 'Courier New', monospace;
-}
-
-.gps-value {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-}
-
-.gps-hdop {
-    font-size: 8px;
-    color: var(--dji-text-dim);
-}
-
-.system-status {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--dji-green);
-    box-shadow: 0 0 8px var(--dji-green);
-    animation: statusPulse 2s ease infinite;
-}
-
-@keyframes statusPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
-.status-dot.ok {
-    background: var(--dji-green);
-    box-shadow: 0 0 8px var(--dji-green);
-}
-
-.status-dot.warning {
-    background: var(--dji-yellow);
-    box-shadow: 0 0 8px var(--dji-yellow);
-}
-
-.status-dot.error {
-    background: var(--dji-red);
-    box-shadow: 0 0 8px var(--dji-red);
-}
-
-/* === HUD OVERLAY (Minimal DJI Style) === */
+/* HUD Overlay */
 .hud-overlay {
     position: absolute;
-    inset: 42px 0 50px 0;
+    inset: 0;
     pointer-events: none;
-    z-index: 500;
+    z-index: 40;
 }
 
 .hud-center {
@@ -729,178 +530,131 @@ body, html {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
 }
 
-.crosshair-main {
-    position: relative;
-    width: 40px;
-    height: 40px;
-}
-
-.ch-line {
-    position: absolute;
-    background: rgba(0, 132, 255, 0.5);
-}
-
-.ch-h {
+.crosshair {
     width: 100%;
-    height: 1px;
+    height: 100%;
+    position: relative;
+}
+
+.crosshair::before,
+.crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(0, 132, 255, 0.6);
+}
+
+.crosshair::before {
+    width: 100%;
+    height: 2px;
     top: 50%;
+    left: 0;
     transform: translateY(-50%);
 }
 
-.ch-v {
+.crosshair::after {
+    width: 2px;
     height: 100%;
-    width: 1px;
     left: 50%;
+    top: 0;
     transform: translateX(-50%);
 }
 
-.ch-dot {
+.crosshair-dot {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 6px;
-    height: 6px;
-    background: var(--dji-primary);
+    width: 8px;
+    height: 8px;
+    background: var(--dji-blue);
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--dji-primary);
+    box-shadow: 0 0 10px var(--dji-blue);
 }
 
-/* HUD Info - Floating */
-.hud-left, .hud-right {
+/* Coordinate Display */
+.coord-display {
     position: absolute;
-    top: 15px;
-}
-
-.hud-left { left: 80px; }
-.hud-right { right: 170px; }
-
-.hud-info-box {
-    background: var(--dji-bg);
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(20px);
     border: 1px solid var(--dji-border);
-    border-radius: 6px;
-    padding: 8px 12px;
-    min-width: 130px;
-}
-
-.hud-label {
-    font-size: 8px;
-    color: var(--dji-text-dim);
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.hud-coord, .hud-data-row {
+    border-radius: 8px;
+    padding: 12px 16px;
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 4px;
-    font-size: 10px;
+    gap: 20px;
+    pointer-events: auto;
 }
 
-.hud-coord span, .hud-data-row span {
-    color: var(--dji-text-dim);
+.coord-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.coord-label {
     font-size: 9px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
 }
 
-.hud-coord strong, .hud-data-row strong {
-    color: var(--dji-primary);
-    font-family: 'SF Mono', 'Courier New', monospace;
-    font-size: 10px;
+.coord-value {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'SF Mono', monospace;
+    color: var(--dji-blue);
 }
 
-/* === VIEW SWITCHER === */
-.view-switcher {
-    position: absolute;
-    top: 60px;
-    right: 15px;
-    z-index: 1100;
-}
-
-.view-switch-btn {
-    width: 40px;
-    height: 40px;
-    background: var(--dji-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--dji-border);
-    border-radius: 50%;
-    color: var(--dji-primary);
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s;
-}
-
-.view-switch-btn:hover {
-    transform: scale(1.1) rotate(180deg);
-    background: rgba(0, 132, 255, 0.2);
-    border-color: var(--dji-primary);
-}
-
-/* === TAKEOFF MODAL (DJI Style) === */
+/* Takeoff Modal */
 .takeoff-modal {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.9);
     backdrop-filter: blur(10px);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 2000;
-    animation: fadeIn 0.3s ease;
 }
 
 .takeoff-modal.show {
     display: flex;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
 .takeoff-content {
     background: var(--dji-panel);
-    backdrop-filter: blur(30px);
     border: 1px solid var(--dji-border);
     border-radius: 12px;
-    padding: 25px;
-    min-width: 400px;
-    box-shadow: var(--shadow-lg);
-    animation: slideUp 0.4s ease;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    padding: 30px;
+    width: 450px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .takeoff-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .takeoff-header h3 {
-    font-size: 16px;
-    letter-spacing: 1px;
-    color: var(--dji-primary);
+    font-size: 18px;
+    color: var(--dji-blue);
 }
 
 .close-modal {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     background: transparent;
     border: 1px solid var(--dji-border);
     border-radius: 6px;
-    color: var(--dji-text);
-    font-size: 16px;
+    color: white;
     cursor: pointer;
-    transition: all 0.2s;
+    font-size: 16px;
 }
 
 .close-modal:hover {
@@ -909,33 +663,35 @@ body, html {
 }
 
 .takeoff-params {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
     margin-bottom: 25px;
 }
 
 .param-row {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
-    font-size: 12px;
+    align-items: center;
 }
 
 .param-row label {
-    color: var(--dji-text-dim);
+    font-size: 13px;
+    color: var(--text-secondary);
 }
 
 .param-row input {
-    width: 70px;
-    padding: 6px;
+    width: 100px;
+    padding: 8px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--dji-border);
-    border-radius: 4px;
-    color: var(--dji-text);
-    font-size: 12px;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
     text-align: center;
 }
 
-/* Slider - DJI Style */
+/* Slider */
 .slider-container {
     margin-top: 20px;
 }
@@ -946,22 +702,19 @@ body, html {
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid var(--dji-green);
     border-radius: 30px;
-    display: flex;
-    align-items: center;
     padding: 4px;
-    overflow: hidden;
 }
 
 .slider-label {
     position: absolute;
     width: 100%;
     text-align: center;
-    font-size: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.5px;
     color: var(--dji-green);
     pointer-events: none;
-    z-index: 1;
 }
 
 .slider-handle {
@@ -976,8 +729,6 @@ body, html {
     cursor: grab;
     position: relative;
     left: 0;
-    z-index: 2;
-    box-shadow: 0 4px 15px rgba(0, 213, 106, 0.5);
     transition: transform 0.1s;
 }
 
@@ -988,101 +739,77 @@ body, html {
 
 .slider-handle i {
     font-size: 10px;
-    color: white;
+    color: #000;
 }
 
-/* Toggle Buttons */
-.toggle-left, .toggle-right {
-    display: none;
-}
-
-/* Mission Info - Hide by default (DJI minimal) */
-.mission-info {
-    display: none;
-}
-
-/* === RESPONSIVE === */
-@media screen and (max-width: 1600px) {
-    .sidebar-right {
-        width: 120px;
-    }
-    
-    .horizon-panel canvas {
-        width: 85px !important;
-        height: 85px !important;
-    }
-    
-    .compass-panel canvas {
-        width: 75px !important;
-        height: 75px !important;
-    }
-}
-
+/* Responsive */
 @media screen and (max-width: 1400px) {
-    .hud-left, .hud-right {
-        display: none;
+    #app {
+        grid-template-columns: 280px 1fr;
     }
     
-    .sidebar-right .speed-panel {
-        display: none;
+    .sidebar-left {
+        width: 280px;
+    }
+    
+    .telem-grid {
+        gap: 10px;
+    }
+    
+    .telem-card {
+        padding: 10px;
     }
 }
 
 @media screen and (max-width: 1280px) {
-    .brand-sub {
-        display: none;
+    #app {
+        grid-template-columns: 240px 1fr;
     }
     
-    .mode-option span {
-        display: none;
+    .telem-card-value {
+        font-size: 18px;
     }
     
-    .sidebar-right {
-        width: 100px;
+    .attitude-display canvas {
+        width: 140px !important;
+        height: 140px !important;
     }
     
-    .sidebar-right .alt-panel {
-        display: none;
-    }
-    
-    .telem-group:last-child {
-        display: none;
+    .compass-display canvas {
+        width: 120px !important;
+        height: 120px !important;
     }
 }
 
-@media screen and (max-height: 800px) {
-    .command-bar {
-        height: 38px;
-    }
-    
-    .telemetry-bar {
-        height: 45px;
-    }
-    
-    .sidebar-right {
-        top: 50px;
-        bottom: 55px;
-    }
+/* Hide elements */
+.sidebar-right,
+.nav-tools,
+.mission-info,
+.toggle-left,
+.toggle-right,
+.view-switcher,
+.cmd-center,
+.connection-badge {
+    display: none;
 }
 
-/* Leaflet customization */
+.main-view {
+    display: none;
+}
+
+#map-view {
+    display: block;
+}
+
+/* Leaflet Customization */
 .leaflet-control-zoom {
     border: 1px solid var(--dji-border) !important;
     border-radius: 6px !important;
-    overflow: hidden;
 }
 
 .leaflet-control-zoom a {
-    background: var(--dji-bg) !important;
+    background: rgba(0, 0, 0, 0.8) !important;
     backdrop-filter: blur(20px);
-    color: var(--dji-text) !important;
+    color: white !important;
     border: none !important;
-}
-
-.leaflet-control-zoom a:hover {
-    background: rgba(0, 0, 0, 0.9) !important;
-}
-
-.leaflet-bar {
-    box-shadow: var(--shadow-sm) !important;
 }
