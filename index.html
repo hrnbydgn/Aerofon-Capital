@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drone Ground Control</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Orientation Warning -->
+    <div id="orientation-warning">
+        <div class="warning-content">
+            <i class="fas fa-mobile-screen fa-rotate-90"></i>
+            <h2>YATAY MOD GEREKLİ</h2>
+            <p>Cihazı yatay konuma çevirin</p>
+        </div>
+    </div>
+
+    <div id="app">
+        <!-- Top Bar -->
+        <header class="command-bar">
+            <div class="cmd-left">
+                <div class="qgc-brand">
+                    <div class="brand-icon">
+                        <i class="fas fa-drone"></i>
+                    </div>
+                    <div class="brand-name">DRONE GCS</div>
+                </div>
+                <div class="flight-mode" id="flightMode">STABILIZE</div>
+            </div>
+            
+            <div class="cmd-right">
+                <div class="status-bar">
+                    <div class="status-item">
+                        <i class="fas fa-satellite-dish"></i>
+                        <span id="signalStrength">98%</span>
+                    </div>
+                    <div class="status-item">
+                        <i class="fas fa-clock"></i>
+                        <span id="topFlightTime">00:00</span>
+                    </div>
+                </div>
+                <button class="arm-button" id="armBtn">
+                    <i class="fas fa-power-off"></i>
+                    ARM
+                </button>
+            </div>
+        </header>
+
+        <!-- Left Telemetry Panel -->
+        <aside class="sidebar-left">
+            <!-- Primary Telemetry -->
+            <div class="panel-section">
+                <div class="section-title">Flight Data</div>
+                <div class="telem-grid">
+                    <div class="telem-card altitude">
+                        <div class="telem-card-icon">
+                            <i class="fas fa-arrow-up"></i>
+                            <div class="telem-card-label">Altitude</div>
+                        </div>
+                        <div>
+                            <span class="telem-card-value" id="cardAlt">0</span>
+                            <span class="telem-card-unit">m</span>
+                        </div>
+                    </div>
+                    
+                    <div class="telem-card speed">
+                        <div class="telem-card-icon">
+                            <i class="fas fa-gauge-high"></i>
+                            <div class="telem-card-label">Speed</div>
+                        </div>
+                        <div>
+                            <span class="telem-card-value" id="cardSpeed">0.0</span>
+                            <span class="telem-card-unit">m/s</span>
+                        </div>
+                    </div>
+                    
+                    <div class="telem-card">
+                        <div class="telem-card-icon">
+                            <i class="fas fa-arrow-trend-up"></i>
+                            <div class="telem-card-label">V/S</div>
+                        </div>
+                        <div>
+                            <span class="telem-card-value" id="cardClimb">0.0</span>
+                            <span class="telem-card-unit">m/s</span>
+                        </div>
+                    </div>
+                    
+                    <div class="telem-card">
+                        <div class="telem-card-icon">
+                            <i class="fas fa-route"></i>
+                            <div class="telem-card-label">Distance</div>
+                        </div>
+                        <div>
+                            <span class="telem-card-value" id="cardDist">0</span>
+                            <span class="telem-card-unit">m</span>
+                        </div>
+                    </div>
+                    
+                    <div class="telem-card battery" id="batteryCard">
+                        <div class="telem-card-icon">
+                            <i class="fas fa-battery-full" id="cardBattIcon"></i>
+                            <div class="telem-card-label">Battery</div>
+                        </div>
+                        <div>
+                            <span class="telem-card-value" id="cardBattPercent">100</span>
+                            <span class="telem-card-unit">%</span>
+                        </div>
+                        <div class="battery-progress">
+                            <div class="battery-fill" id="cardBattFill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="telem-card gps">
+                        <div class="telem-card-icon">
+                            <i class="fas fa-satellite"></i>
+                            <div class="telem-card-label">GPS</div>
+                        </div>
+                        <div>
+                            <span class="telem-card-value" id="cardGPS">12</span>
+                            <span class="telem-card-unit">sats</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Attitude Indicator -->
+            <div class="panel-section attitude-section">
+                <div class="section-title">Attitude</div>
+                <div class="attitude-display">
+                    <canvas id="horizonCanvas" width="200" height="200"></canvas>
+                </div>
+                <div class="attitude-values">
+                    <div class="attitude-value">
+                        <div class="attitude-value-label">Roll</div>
+                        <div class="attitude-value-number" id="rollValue">0°</div>
+                    </div>
+                    <div class="attitude-value">
+                        <div class="attitude-value-label">Pitch</div>
+                        <div class="attitude-value-number" id="pitchValue">0°</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Compass -->
+            <div class="panel-section compass-section">
+                <div class="section-title">Heading</div>
+                <div class="compass-display">
+                    <canvas id="compassCanvas" width="160" height="160"></canvas>
+                    <div class="compass-heading" id="compassHeading">0°</div>
+                </div>
+            </div>
+            
+            <!-- GPS Details -->
+            <div class="panel-section">
+                <div class="section-title">GPS Details</div>
+                <div class="gps-info">
+                    <div class="gps-row">
+                        <span class="gps-row-label">Latitude:</span>
+                        <span class="gps-row-value" id="gpsLat">41.008200</span>
+                    </div>
+                    <div class="gps-row">
+                        <span class="gps-row-label">Longitude:</span>
+                        <span class="gps-row-value" id="gpsLon">28.978400</span>
+                    </div>
+                    <div class="gps-row">
+                        <span class="gps-row-label">HDOP:</span>
+                        <span class="gps-row-value" id="gpsHDOP">1.2</span>
+                    </div>
+                    <div class="gps-row">
+                        <span class="gps-row-label">Home Distance:</span>
+                        <span class="gps-row-value" id="gpsHome">0 m</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="panel-section action-section">
+                <button class="action-btn takeoff" onclick="showTakeoffSlider()">
+                    <i class="fas fa-plane-departure"></i>
+                    TAKEOFF
+                </button>
+                <button class="action-btn">
+                    <i class="fas fa-plane-arrival"></i>
+                    LAND
+                </button>
+                <button class="action-btn">
+                    <i class="fas fa-home"></i>
+                    RTH
+                </button>
+                <button class="action-btn emergency">
+                    <i class="fas fa-hand"></i>
+                    EMERGENCY
+                </button>
+            </div>
+        </aside>
+
+        <!-- Map View -->
+        <div id="map-view">
+            <div id="map-container"></div>
+            
+            <!-- Camera PIP -->
+            <div id="camera-view" onclick="toggleCameraFullscreen()">
+                <div class="live-indicator">
+                    <span></span>LIVE
+                </div>
+            </div>
+            
+            <!-- HUD Overlay -->
+            <div class="hud-overlay">
+                <div class="hud-center">
+                    <div class="crosshair">
+                        <div class="crosshair-dot"></div>
+                    </div>
+                </div>
+                
+                <div class="coord-display">
+                    <div class="coord-item">
+                        <div class="coord-label">LAT</div>
+                        <div class="coord-value" id="hudLat">41.008200</div>
+                    </div>
+                    <div class="coord-item">
+                        <div class="coord-label">LON</div>
+                        <div class="coord-value" id="hudLon">28.978400</div>
+                    </div>
+                    <div class="coord-item">
+                        <div class="coord-label">ALT</div>
+                        <div class="coord-value" id="hudAlt">0 m</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Takeoff Modal -->
+        <div class="takeoff-modal" id="takeoffModal">
+            <div class="takeoff-content">
+                <div class="takeoff-header">
+                    <h3>TAKEOFF SEQUENCE</h3>
+                    <button class="close-modal" onclick="closeTakeoffSlider()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="takeoff-params">
+                    <div class="param-row">
+                        <label>Target Altitude:</label>
+                        <input type="number" value="10" id="takeoffAlt"> m
+                    </div>
+                    <div class="param-row">
+                        <label>Climb Rate:</label>
+                        <input type="number" value="2.5" id="takeoffRate" step="0.1"> m/s
+                    </div>
+                </div>
+                <div class="slider-container">
+                    <div class="slider-track">
+                        <span class="slider-label">SLIDE TO CONFIRM</span>
+                        <div class="slider-handle" id="sliderHandle">
+                            <i class="fas fa-chevron-right"></i>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
