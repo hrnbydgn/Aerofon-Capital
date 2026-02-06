@@ -1624,3 +1624,101 @@ ul, ol { list-style: none; }
 .add-item-row .btn {
   padding: 12px 16px;
 }
+
+/* --- Form Elements (PHP forms) --- */
+.form-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-primary);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  font-family: inherit;
+}
+
+.form-input:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* --- Shop Delete Button --- */
+.shop-delete-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.shop-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--accent-danger);
+}
+
+/* --- Bar Chart Value Labels --- */
+.bar-value {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* --- Page transition for PHP pages --- */
+.app-container > *:first-child {
+  animation: fadeInUp 0.3s ease;
+}
+
+/* --- Link resets for nav --- */
+a.quick-action,
+a.nav-item,
+a.section-link,
+a.filter-chip {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.nav-item {
+  color: var(--text-muted);
+}
+
+a.nav-item.active {
+  color: var(--accent-primary-light);
+}
+
+a.section-link {
+  color: var(--accent-primary-light);
+}
+
+a.filter-chip {
+  color: var(--text-secondary);
+}
+
+a.filter-chip.active {
+  color: var(--accent-primary-light);
+}
