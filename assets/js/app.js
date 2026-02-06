@@ -1,311 +1,157 @@
 /* ============================================
-   EVLY - Akıllı Ev Yönetimi
-   PHP Tabanlı Uygulama JavaScript
+   EVLY 2.0 — Akıllı Ev Yönetimi
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initScanArea();
+  initScan();
   initInventorySearch();
   initBottomSheets();
   initNotifications();
   initShareList();
-  registerServiceWorker();
+  registerSW();
 });
 
-// ============================================
-// SCAN AREA (Fiş Tarama Animasyonu)
-// ============================================
-function initScanArea() {
-  const scanArea = document.getElementById('scan-area');
-  const btnGallery = document.getElementById('btn-gallery');
-
-  if (scanArea) {
-    scanArea.addEventListener('click', () => {
-      if (!scanArea.classList.contains('scanning')) {
-        startScanAnimation(scanArea);
-      }
-    });
-  }
-
-  if (btnGallery) {
-    btnGallery.addEventListener('click', () => {
-      showToast('🖼️', 'Galeri açılıyor...');
-      if (scanArea) {
-        setTimeout(() => {
-          startScanAnimation(scanArea);
-          setTimeout(() => {
-            stopScanAnimation(scanArea);
-            showToast('✅', 'Fiş başarıyla okundu! Sayfa yenileniyor...');
-            setTimeout(() => location.reload(), 1500);
-          }, 3000);
-        }, 500);
-      }
-    });
-  }
+// === Scan ===
+function initScan() {
+  const zone = document.getElementById('scan-area');
+  if (zone) zone.addEventListener('click', () => {
+    if (!zone.classList.contains('scanning')) {
+      zone.classList.add('scanning');
+      const ph = zone.querySelector('.scan-ph');
+      if (ph) { ph.querySelector('.s-icon').textContent = '📡'; ph.querySelector('p').textContent = 'Taranıyor...'; ph.querySelector('.s-hint').textContent = 'Lütfen fişi sabit tutun'; }
+      setTimeout(() => {
+        zone.classList.remove('scanning');
+        if (ph) { ph.querySelector('.s-icon').textContent = '📸'; ph.querySelector('p').textContent = 'Fişi çerçeveye yerleştirin'; ph.querySelector('.s-hint').textContent = 'AI ile otomatik ürün tespiti yapılacak'; }
+        showToast('✅', 'Tarama tamamlandı');
+      }, 3500);
+    }
+  });
 }
 
-function startScanAnimation(scanArea) {
-  scanArea.classList.add('scanning');
-  const placeholder = scanArea.querySelector('.scan-placeholder');
-  if (placeholder) {
-    placeholder.querySelector('.scan-big-icon').textContent = '📡';
-    placeholder.querySelector('p').textContent = 'Taranıyor...';
-    placeholder.querySelector('.scan-hint').textContent = 'Lütfen fişi sabit tutun';
-  }
-}
-
-function stopScanAnimation(scanArea) {
-  scanArea.classList.remove('scanning');
-  const placeholder = scanArea.querySelector('.scan-placeholder');
-  if (placeholder) {
-    placeholder.querySelector('.scan-big-icon').textContent = '📸';
-    placeholder.querySelector('p').textContent = 'Fişi çerçeveye yerleştirin';
-    placeholder.querySelector('.scan-hint').textContent = 'OCR ile otomatik okunacak';
-  }
-}
-
-// ============================================
-// INVENTORY SEARCH (Client-side filter)
-// ============================================
+// === Inventory Search ===
 function initInventorySearch() {
-  const searchInput = document.getElementById('inventory-search');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase().trim();
-      document.querySelectorAll('.inv-card').forEach(card => {
-        const name = (card.dataset.name || card.querySelector('.inv-name')?.textContent || '').toLowerCase();
-        card.style.display = name.includes(query) || query === '' ? '' : 'none';
-      });
+  const input = document.getElementById('inventory-search');
+  if (input) input.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.inv-card').forEach(c => {
+      c.style.display = (c.dataset.name || '').includes(q) || !q ? '' : 'none';
     });
-  }
+  });
 }
 
-// ============================================
-// BOTTOM SHEETS (Template Based)
-// ============================================
+// === Bottom Sheets ===
 function initBottomSheets() {
-  // Manuel fiş girişi
-  const btnManual = document.getElementById('btn-manual');
-  if (btnManual) {
-    btnManual.addEventListener('click', () => {
-      const tpl = document.getElementById('tpl-manual-receipt');
-      if (tpl) openBottomSheet(tpl.innerHTML);
-    });
-  }
-
-  // Ürün ekleme
-  const btnAddProduct = document.getElementById('btn-add-product');
-  if (btnAddProduct) {
-    btnAddProduct.addEventListener('click', () => {
-      const tpl = document.getElementById('tpl-add-product');
-      if (tpl) openBottomSheet(tpl.innerHTML);
-    });
-  }
-
-  // Profil düzenleme
-  const btnEditProfile = document.getElementById('btn-edit-profile');
-  if (btnEditProfile) {
-    btnEditProfile.addEventListener('click', () => {
-      const tpl = document.getElementById('tpl-edit-profile');
-      if (tpl) openBottomSheet(tpl.innerHTML);
-    });
-  }
+  const map = { 'btn-manual': 'tpl-manual-receipt', 'btn-add-product': 'tpl-add-product', 'btn-edit-profile': 'tpl-edit-profile' };
+  Object.entries(map).forEach(([btnId, tplId]) => {
+    const btn = document.getElementById(btnId);
+    const tpl = document.getElementById(tplId);
+    if (btn && tpl) btn.addEventListener('click', () => openSheet(tpl.innerHTML));
+  });
 }
 
-// ============================================
-// NOTIFICATIONS
-// ============================================
+// === Notifications ===
 function initNotifications() {
-  const notifBtn = document.getElementById('btn-notifications');
-  if (notifBtn) {
-    notifBtn.addEventListener('click', () => {
-      fetch('api/products.php')
-        .then(r => r.json())
-        .then(res => {
-          if (!res.success) return;
-          const lowItems = res.data.filter(p => p.pct <= 35);
-          let html = '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px;">Bildirimler</h3>';
-          html += '<div style="display:flex;flex-direction:column;gap:12px;">';
-          if (lowItems.length === 0) {
-            html += '<div class="empty-state" style="padding:16px;"><p>Yeni bildirim yok</p></div>';
-          } else {
-            lowItems.forEach(p => {
-              html += `
-                <div class="card" style="display:flex;gap:12px;align-items:flex-start;">
-                  <div style="font-size:1.3rem;">${p.icon}</div>
-                  <div>
-                    <div style="font-size:0.85rem;font-weight:600;">${escapeHtml(p.name)} azalıyor</div>
-                    <div style="font-size:0.75rem;color:var(--text-secondary);">AI tahminine göre kısa sürede bitecek. Stok: %${p.pct}</div>
-                  </div>
-                </div>`;
-            });
-          }
-          html += '</div>';
-          openBottomSheet(html);
-        })
-        .catch(() => {
-          openBottomSheet('<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:12px;">Bildirimler</h3><p class="text-muted text-sm">Bildirimler yüklenemedi.</p>');
+  const btn = document.getElementById('btn-notif');
+  if (btn) btn.addEventListener('click', () => {
+    fetch('api/products.php')
+      .then(r => r.json())
+      .then(res => {
+        if (!res.success) return;
+        const low = res.data.filter(p => p.pct <= 40);
+        let h = '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:14px;">🔔 Bildirimler</h3><div style="display:flex;flex-direction:column;gap:10px;">';
+        if (!low.length) { h += '<p style="color:var(--text-muted);text-align:center;padding:20px;">Yeni bildirim yok ✅</p>'; }
+        else low.forEach(p => {
+          h += `<div class="ai-banner" style="margin:0;border-left-color:${p.pct<=20?'var(--accent-red)':'var(--accent-amber)'}">
+            <div style="font-size:1.3rem;">${p.icon}</div>
+            <div class="ai-body"><div class="ai-text" style="font-size:0.84rem;">${esc(p.name)} azalıyor</div>
+            <div class="ai-sub">Stok: %${p.pct} — AI tahminine göre kısa sürede bitecek</div></div></div>`;
         });
-    });
-  }
+        h += '</div>';
+        openSheet(h);
+      }).catch(() => openSheet('<p style="text-align:center;padding:20px;">Bildirimler yüklenemedi</p>'));
+  });
 
   const searchBtn = document.getElementById('btn-search');
-  if (searchBtn) {
-    searchBtn.addEventListener('click', () => {
-      openBottomSheet(`
-        <div class="search-bar" style="margin-bottom:16px;">
-          <span class="search-icon">🔍</span>
-          <input type="text" placeholder="Ürün, market veya kategori ara..." id="global-search" autofocus style="flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-size:0.9rem;">
+  if (searchBtn) searchBtn.addEventListener('click', () => {
+    openSheet(`
+      <div class="search-bar" style="margin-bottom:14px;"><span class="s-icon">🔍</span>
+        <input type="text" placeholder="Ürün, market veya kategori ara..." id="g-search" autofocus style="flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-size:0.88rem;">
+      </div>
+      <div id="s-results"></div>
+      <div style="margin-top:10px;"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">Hızlı Erişim</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <a href="?page=inventory&filter=dairy" class="chip">🥛 Süt Ürünleri</a>
+          <a href="?page=inventory&filter=fruits" class="chip">🍎 Meyve</a>
+          <a href="?page=inventory&filter=cleaning" class="chip">🧹 Temizlik</a>
+          <a href="?page=inventory&filter=meat" class="chip">🥩 Et</a>
         </div>
-        <div id="search-results"></div>
-        <div style="margin-bottom:12px;">
-          <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Hızlı Erişim</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            <a href="?page=inventory&filter=dairy" class="filter-chip">🥛 Süt Ürünleri</a>
-            <a href="?page=inventory&filter=fruits" class="filter-chip">🍎 Meyve</a>
-            <a href="?page=inventory&filter=cleaning" class="filter-chip">🧹 Temizlik</a>
-            <a href="?page=inventory&filter=meat" class="filter-chip">🥩 Et</a>
-          </div>
-        </div>
-      `);
-      setTimeout(() => {
-        const input = document.getElementById('global-search');
-        if (input) {
-          input.focus();
-          input.addEventListener('input', debounce((e) => {
-            const q = e.target.value.trim();
-            if (q.length < 2) {
-              document.getElementById('search-results').innerHTML = '';
-              return;
-            }
-            fetch(`api/products.php?search=${encodeURIComponent(q)}`)
-              .then(r => r.json())
-              .then(res => {
-                const container = document.getElementById('search-results');
-                if (!res.success || res.data.length === 0) {
-                  container.innerHTML = '<p class="text-sm text-muted mb-3">Sonuç bulunamadı</p>';
-                  return;
-                }
-                let html = '<div style="margin-bottom:12px;">';
-                res.data.forEach(p => {
-                  html += `<a href="?page=inventory" class="product-card" style="margin-bottom:6px;display:flex;">
-                    <div class="product-icon" style="background:rgba(99,102,241,0.12)">${p.icon}</div>
-                    <div class="product-info"><div class="product-name">${escapeHtml(p.name)}</div><div class="product-meta">${escapeHtml(p.cat_name || '')}</div></div>
-                    <span class="status-badge ${p.pct <= 20 ? 'critical' : p.pct <= 45 ? 'warning' : 'good'}">%${p.pct}</span>
-                  </a>`;
-                });
-                html += '</div>';
-                container.innerHTML = html;
-              });
-          }, 300));
-        }
-      }, 400);
-    });
-  }
-}
-
-// ============================================
-// SHARE LIST
-// ============================================
-function initShareList() {
-  const shareBtn = document.getElementById('btn-share-list');
-  if (shareBtn) {
-    shareBtn.addEventListener('click', () => {
-      const items = document.querySelectorAll('.shop-item:not(.checked) .shop-name');
-      let text = '🛒 Evly Alışveriş Listesi\n\n';
-      items.forEach((item, i) => {
-        text += `${i + 1}. ${item.textContent}\n`;
-      });
-
-      if (navigator.share) {
-        navigator.share({ title: 'Evly Alışveriş Listesi', text }).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(text).then(() => {
-          showToast('📋', 'Liste panoya kopyalandı');
-        }).catch(() => {
-          showToast('ℹ️', 'Paylaşım desteklenmiyor');
+      </div>`);
+    setTimeout(() => {
+      const inp = document.getElementById('g-search');
+      if (inp) { inp.focus(); inp.addEventListener('input', debounce(e => {
+        const q = e.target.value.trim();
+        const c = document.getElementById('s-results');
+        if (q.length < 2) { c.innerHTML = ''; return; }
+        fetch(`api/products.php?search=${encodeURIComponent(q)}`).then(r=>r.json()).then(res => {
+          if (!res.success || !res.data.length) { c.innerHTML = '<p style="font-size:0.82rem;color:var(--text-muted);padding:10px;">Sonuç bulunamadı</p>'; return; }
+          let h = '';
+          res.data.forEach(p => {
+            const lv = p.pct <= 20 ? 'critical' : p.pct <= 40 ? 'warning' : 'good';
+            h += `<a href="?page=inventory" class="prod-card" style="margin-bottom:6px;text-decoration:none;">
+              <div class="prod-icon bg-brand-l">${p.icon}</div>
+              <div class="prod-info"><div class="prod-name">${esc(p.name)}</div><div class="prod-meta">${esc(p.cat_name||'')}</div></div>
+              <span class="prod-badge ${lv}">%${p.pct}</span></a>`;
+          });
+          c.innerHTML = h;
         });
-      }
-    });
-  }
+      }, 300)); }
+    }, 400);
+  });
 }
 
-// ============================================
-// BOTTOM SHEET
-// ============================================
-function openBottomSheet(content) {
-  const overlay = document.getElementById('modal-overlay');
-  const sheet = document.getElementById('bottom-sheet');
-  const sheetContent = document.getElementById('sheet-content');
-
-  if (sheetContent) sheetContent.innerHTML = content;
-  if (overlay) overlay.classList.add('active');
-  if (sheet) sheet.classList.add('active');
-
-  if (overlay) overlay.onclick = closeBottomSheet;
+// === Share List ===
+function initShareList() {
+  const btn = document.getElementById('btn-share-list');
+  if (btn) btn.addEventListener('click', () => {
+    const items = document.querySelectorAll('.shop-item:not(.checked) .si-name');
+    let t = '🛒 Evly Alışveriş Listesi\n\n';
+    items.forEach((el, i) => t += `${i+1}. ${el.textContent}\n`);
+    if (navigator.share) navigator.share({ title: 'Evly Alışveriş Listesi', text: t }).catch(()=>{});
+    else navigator.clipboard.writeText(t).then(() => showToast('📋','Liste panoya kopyalandı')).catch(()=>{});
+  });
 }
 
-function closeBottomSheet() {
-  const overlay = document.getElementById('modal-overlay');
-  const sheet = document.getElementById('bottom-sheet');
-  if (overlay) overlay.classList.remove('active');
-  if (sheet) sheet.classList.remove('active');
+// === Sheet ===
+function openSheet(html) {
+  const o = document.getElementById('modal-overlay'), s = document.getElementById('btm-sheet'), c = document.getElementById('sheet-content');
+  if (c) c.innerHTML = html;
+  if (o) { o.classList.add('active'); o.onclick = closeSheet; }
+  if (s) s.classList.add('active');
+}
+function closeSheet() {
+  document.getElementById('modal-overlay')?.classList.remove('active');
+  document.getElementById('btm-sheet')?.classList.remove('active');
 }
 
-// ============================================
-// TOAST
-// ============================================
-function showToast(icon, message) {
-  const toast = document.getElementById('toast');
-  const toastIcon = document.getElementById('toast-icon');
-  const toastMsg = document.getElementById('toast-msg');
-
-  if (toastIcon) toastIcon.textContent = icon;
-  if (toastMsg) toastMsg.textContent = message;
-  if (toast) {
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-  }
+// === Toast ===
+function showToast(icon, msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ============================================
-// SERVICE WORKER
-// ============================================
-function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  }
-}
+// === SW ===
+function registerSW() { if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 
-// ============================================
-// UTILITIES
-// ============================================
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+// === Utils ===
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 
-function debounce(fn, delay) {
-  let timer;
-  return function(...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), delay);
-  };
-}
-
-// Swipe to close bottom sheet
-let touchStartY = 0;
-document.addEventListener('touchstart', e => {
-  const sheet = document.getElementById('bottom-sheet');
-  if (sheet?.classList.contains('active')) touchStartY = e.touches[0].clientY;
-});
-document.addEventListener('touchmove', e => {
-  const sheet = document.getElementById('bottom-sheet');
-  if (sheet?.classList.contains('active') && (e.touches[0].clientY - touchStartY) > 80) {
-    closeBottomSheet();
-  }
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeBottomSheet();
-});
+// Swipe & ESC
+let ty = 0;
+document.addEventListener('touchstart', e => { if (document.getElementById('btm-sheet')?.classList.contains('active')) ty = e.touches[0].clientY; });
+document.addEventListener('touchmove', e => { if (document.getElementById('btm-sheet')?.classList.contains('active') && e.touches[0].clientY - ty > 80) closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });

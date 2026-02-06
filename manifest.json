@@ -4,8 +4,8 @@
   "description": "Evdeki alışveriş ve tüketim süreçlerini düzenleyen yapay zeka destekli ev ERP uygulaması",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#6366f1",
+  "background_color": "#f0f4f3",
+  "theme_color": "#2d9f83",
   "orientation": "portrait-primary",
   "icons": [
     {
