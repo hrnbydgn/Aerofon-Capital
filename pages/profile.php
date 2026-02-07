@@ -67,6 +67,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
 <div class="settings-grp">
   <div class="settings-grp-title">Uygulama</div>
   <div class="settings-list">
+    <div class="set-item">
+      <div class="set-icon">🌙</div>
+      <div class="set-text"><div class="set-label">Koyu Tema</div><div class="set-desc">Göz yormayan karanlık mod</div></div>
+      <div class="toggle" id="theme-toggle-profile" onclick="document.getElementById('btn-theme')?.click();this.classList.toggle('on')"></div>
+    </div>
+    <script>document.addEventListener('DOMContentLoaded',()=>{const t=document.getElementById('theme-toggle-profile');if(t&&document.documentElement.getAttribute('data-theme')==='dark')t.classList.add('on');});</script>
     <div class="set-item"><div class="set-icon">🌐</div><div class="set-text"><div class="set-label">Dil</div><div class="set-desc">Türkçe</div></div><span class="set-arrow">›</span></div>
     <div class="set-item"><div class="set-icon">💾</div><div class="set-text"><div class="set-label">Veri Yedekleme</div><div class="set-desc">Son: <?= date('d.m.Y H:i') ?></div></div><span class="set-arrow">›</span></div>
     <div class="set-item"><div class="set-icon">🔒</div><div class="set-text"><div class="set-label">Gizlilik & Güvenlik</div><div class="set-desc">Şifre, biyometrik</div></div><span class="set-arrow">›</span></div>
@@ -78,7 +84,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
   <div class="settings-list">
     <form method="post"><input type="hidden" name="action" value="reset_data">
       <button type="submit" class="set-item w-full" onclick="return confirm('Tüm veriler sıfırlanacak. Emin misiniz?')">
-        <div class="set-icon" style="background:#fef2f2;">🔄</div>
+        <div class="set-icon" style="background:var(--danger-soft);">🔄</div>
         <div class="set-text" style="text-align:left;"><div class="set-label">Verileri Sıfırla</div><div class="set-desc">Demo verilere geri dön</div></div>
         <span class="set-arrow">›</span>
       </button>

@@ -18,7 +18,7 @@ $maxMonth = max(array_column($months,'value')) ?: 1;
 // Kategori harcamaları (receipt_items'tan)
 $catSpend = $db->query("SELECT category_guess AS name, SUM(total_price) AS total FROM receipt_items GROUP BY category_guess ORDER BY total DESC LIMIT 5")->fetchAll();
 $catTotal = array_sum(array_column($catSpend,'total')) ?: 1;
-$catColors = ['#2d9f83','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+$catColors = ['#6366f1','#818cf8','#a5b4fc','#c7d2fe','#e0e7ff'];
 
 // En hızlı tüketilen
 $fastConsumed = $db->query("SELECT p.*, c.name AS cn, c.color AS cc FROM products p LEFT JOIN categories c ON c.id=p.category_id ORDER BY p.avg_consumption_days ASC LIMIT 5")->fetchAll();
@@ -123,12 +123,12 @@ $avgReceipt = $totalReceipts > 0 ? $totalSpend / $totalReceipts : 0;
   <div class="prod-list">
     <?php foreach ($fastConsumed as $p): ?>
     <div class="prod-card" style="box-shadow:none;border:none;padding:8px 0;">
-      <div class="prod-icon" style="background:<?= $p['cc'] ?? 'var(--brand)' ?>15"><?= $p['icon'] ?></div>
+      <div class="prod-icon"><?= $p['icon'] ?></div>
       <div class="prod-info">
         <div class="prod-name"><?= e($p['name']) ?></div>
         <div class="prod-meta"><?= (int)$p['avg_consumption_days'] ?> günde tüketim</div>
       </div>
-      <div style="font-size:0.82rem;font-weight:700;color:<?= $p['cc'] ?? 'var(--brand)' ?>"><?= (int)$p['avg_consumption_days'] ?> gün</div>
+      <div style="font-size:0.82rem;font-weight:700;color:var(--brand)"><?= (int)$p['avg_consumption_days'] ?> gün</div>
     </div>
     <?php endforeach; ?>
   </div>

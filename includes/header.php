@@ -9,7 +9,7 @@ $totalNotif = $notifCount + $insightCount;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#f0f4f3">
+  <meta name="theme-color" content="#f8f9fb" id="meta-theme">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="description" content="Evly — Evinizin akıllı yöneticisi. Fiş tarama, stok takibi, AI önerileri.">
@@ -19,6 +19,15 @@ $totalNotif = $notifCount + $insightCount;
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Prevent flash: apply saved theme before render -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('evly-theme');
+      if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme','dark');
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -34,6 +43,7 @@ $totalNotif = $notifCount + $insightCount;
           🔔
           <?php if ($totalNotif > 0): ?><span class="badge"><?= $totalNotif ?></span><?php endif; ?>
         </button>
+        <button class="hdr-btn theme-toggle" id="btn-theme" aria-label="Tema değiştir">🌙</button>
       </div>
     </div>
   </header>

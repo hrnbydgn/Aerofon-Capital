@@ -1,8 +1,10 @@
 /* ============================================
-   EVLY 2.0 — Akıllı Ev Yönetimi
+   EVLY 2.1 — Akıllı Ev Yönetimi
+   Refined palette · Light/Dark theme
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   initScan();
   initInventorySearch();
   initBottomSheets();
@@ -10,6 +12,41 @@ document.addEventListener('DOMContentLoaded', () => {
   initShareList();
   registerSW();
 });
+
+// === Theme (Dark Mode) ===
+function initTheme() {
+  const btn = document.getElementById('btn-theme');
+  if (!btn) return;
+
+  // Set initial icon
+  updateThemeIcon(btn);
+
+  btn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('evly-theme', 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('evly-theme', 'dark');
+    }
+    updateThemeIcon(btn);
+    updateMetaTheme();
+  });
+}
+
+function updateThemeIcon(btn) {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  btn.textContent = isDark ? '☀️' : '🌙';
+  btn.setAttribute('aria-label', isDark ? 'Açık tema' : 'Koyu tema');
+}
+
+function updateMetaTheme() {
+  const meta = document.getElementById('meta-theme');
+  if (!meta) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  meta.setAttribute('content', isDark ? '#0f1117' : '#f8f9fb');
+}
 
 // === Scan ===
 function initScan() {
@@ -59,9 +96,9 @@ function initNotifications() {
         if (!res.success) return;
         const low = res.data.filter(p => p.pct <= 40);
         let h = '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:14px;">🔔 Bildirimler</h3><div style="display:flex;flex-direction:column;gap:10px;">';
-        if (!low.length) { h += '<p style="color:var(--text-muted);text-align:center;padding:20px;">Yeni bildirim yok ✅</p>'; }
+        if (!low.length) { h += '<p style="color:var(--text-3);text-align:center;padding:20px;">Yeni bildirim yok ✅</p>'; }
         else low.forEach(p => {
-          h += `<div class="ai-banner" style="margin:0;border-left-color:${p.pct<=20?'var(--accent-red)':'var(--accent-amber)'}">
+          h += `<div class="ai-banner" style="margin:0;border-left-color:${p.pct<=20?'var(--danger)':'var(--caution)'}">
             <div style="font-size:1.3rem;">${p.icon}</div>
             <div class="ai-body"><div class="ai-text" style="font-size:0.84rem;">${esc(p.name)} azalıyor</div>
             <div class="ai-sub">Stok: %${p.pct} — AI tahminine göre kısa sürede bitecek</div></div></div>`;
@@ -75,10 +112,10 @@ function initNotifications() {
   if (searchBtn) searchBtn.addEventListener('click', () => {
     openSheet(`
       <div class="search-bar" style="margin-bottom:14px;"><span class="s-icon">🔍</span>
-        <input type="text" placeholder="Ürün, market veya kategori ara..." id="g-search" autofocus style="flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-size:0.88rem;">
+        <input type="text" placeholder="Ürün, market veya kategori ara..." id="g-search" autofocus style="flex:1;background:none;border:none;outline:none;color:var(--text-0);font-size:0.88rem;">
       </div>
       <div id="s-results"></div>
-      <div style="margin-top:10px;"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">Hızlı Erişim</div>
+      <div style="margin-top:10px;"><div style="font-size:0.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">Hızlı Erişim</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
           <a href="?page=inventory&filter=dairy" class="chip">🥛 Süt Ürünleri</a>
           <a href="?page=inventory&filter=fruits" class="chip">🍎 Meyve</a>
@@ -93,7 +130,7 @@ function initNotifications() {
         const c = document.getElementById('s-results');
         if (q.length < 2) { c.innerHTML = ''; return; }
         fetch(`api/products.php?search=${encodeURIComponent(q)}`).then(r=>r.json()).then(res => {
-          if (!res.success || !res.data.length) { c.innerHTML = '<p style="font-size:0.82rem;color:var(--text-muted);padding:10px;">Sonuç bulunamadı</p>'; return; }
+          if (!res.success || !res.data.length) { c.innerHTML = '<p style="font-size:0.82rem;color:var(--text-3);padding:10px;">Sonuç bulunamadı</p>'; return; }
           let h = '';
           res.data.forEach(p => {
             const lv = p.pct <= 20 ? 'critical' : p.pct <= 40 ? 'warning' : 'good';

@@ -83,7 +83,7 @@ $storeIcons = ['Migros'=>'🏪','BİM'=>'🏬','A101'=>'🛒','ŞOK'=>'🏪','Ca
 
 <!-- AI Top Insight -->
 <?php if ($topInsight): ?>
-<div class="ai-banner" style="border-left-color:<?= $topInsight['type'] === 'warn' ? 'var(--accent-amber)' : ($topInsight['type'] === 'ai' ? 'var(--accent-purple)' : 'var(--brand)') ?>;">
+<div class="ai-banner" style="border-left-color:<?= $topInsight['type'] === 'warn' ? 'var(--caution)' : 'var(--brand)' ?>;">
   <div class="ai-avatar bg-brand-l"><?= $topInsight['icon'] ?></div>
   <div class="ai-body">
     <div class="ai-label">AI Öneri</div>
@@ -102,27 +102,27 @@ $storeIcons = ['Migros'=>'🏪','BİM'=>'🏬','A101'=>'🛒','ŞOK'=>'🏪','Ca
     <div class="sec-title">🏠 Ev Sağlık Durumu</div>
   </div>
   <div class="scroll-row">
-    <div class="scroll-card" style="border-left:3px solid var(--accent-green)">
+    <div class="scroll-card">
       <div class="sc-icon">🛡️</div>
       <div class="sc-val">%<?= $wasteScore ?></div>
       <div class="sc-lbl">Israf Skoru</div>
     </div>
-    <div class="scroll-card" style="border-left:3px solid <?= $criticalCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' ?>">
+    <div class="scroll-card" <?= $criticalCount > 0 ? 'style="border-left-color:var(--danger)"' : '' ?>>
       <div class="sc-icon"><?= $criticalCount > 0 ? '⚠️' : '✅' ?></div>
       <div class="sc-val"><?= $criticalCount ?></div>
       <div class="sc-lbl">Acil Stok</div>
     </div>
-    <div class="scroll-card" style="border-left:3px solid var(--accent-blue)">
+    <div class="scroll-card">
       <div class="sc-icon">📊</div>
       <div class="sc-val"><?= $spendDiff > 0 ? "+$spendDiff%" : "$spendDiff%" ?></div>
       <div class="sc-lbl">Harcama Trendi</div>
     </div>
-    <div class="scroll-card" style="border-left:3px solid var(--accent-purple)">
+    <div class="scroll-card">
       <div class="sc-icon">🤖</div>
       <div class="sc-val">%94</div>
       <div class="sc-lbl">AI Doğruluk</div>
     </div>
-    <div class="scroll-card" style="border-left:3px solid var(--accent-amber)">
+    <div class="scroll-card">
       <div class="sc-icon">🛒</div>
       <div class="sc-val"><?= $shoppingPending ?></div>
       <div class="sc-lbl">Alınacak</div>
@@ -144,7 +144,7 @@ $storeIcons = ['Migros'=>'🏪','BİM'=>'🏬','A101'=>'🛒','ŞOK'=>'🏪','Ca
       $dl = daysLeft($p['predicted_end']);
     ?>
     <div class="prod-card">
-      <div class="prod-icon" style="background:<?= $p['cat_color'] ?? 'var(--brand)' ?>15"><?= $p['icon'] ?></div>
+      <div class="prod-icon"><?= $p['icon'] ?></div>
       <div class="prod-info">
         <div class="prod-name"><?= e($p['name']) ?></div>
         <div class="prod-meta">
