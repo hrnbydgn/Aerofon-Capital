@@ -128,7 +128,7 @@
                 </div>
                 <div class="form-grup">
                     <label>Paragraf Girinti (cm)</label>
-                    <input type="number" id="ayarGirinti" min="0.5" max="2" step="0.25" value="1.25">
+                    <input type="number" id="ayarGirinti" min="0.5" max="2" step="0.25" value="1">
                 </div>
                 <div class="form-grup">
                     <label>Alt Kenar (cm)</label>

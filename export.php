@@ -1,7 +1,7 @@
 <?php
 /**
- * Tez RTF çıktısı - Bağımlılık yok, AWebServer uyumlu
- * YÖK/Ulusal yazım kurallarına uygun
+ * Tez RTF çıktısı - Tez Yazım Kılavuzuna uygun
+ * Bağımlılık yok, AWebServer uyumlu
  */
 require_once __DIR__ . '/database.php';
 
@@ -12,7 +12,9 @@ if (!$id) {
 }
 
 $proje = getProjeById($id);
-$varsayilan = [
+
+// Kılavuz: 12pt TNR, 1.5 satır, 1cm girinti, 4/2.5/2.5/2.5 cm kenarlar
+$ayarlar = array_merge([
     'font' => 'Times New Roman',
     'font_boyutu' => 12,
     'satir_araligi' => 1.5,
@@ -20,11 +22,8 @@ $varsayilan = [
     'sag_kenar' => 2.5,
     'ust_kenar' => 2.5,
     'alt_kenar' => 2.5,
-    'paragraf_girinti' => 1.25,
-    'baslik_font_boyutu' => 14,
-    'baslik_buyuk_harf' => true,
-];
-$ayarlar = array_merge($varsayilan, $proje['ayarlar'] ?? []);
+    'paragraf_girinti' => 1.0,  // Kılavuz: 1 cm
+], $proje['ayarlar'] ?? []);
 
 function rtfEscape(string $s): string {
     $out = '';
@@ -47,24 +46,54 @@ function cmToTwips(float $cm): int {
     return (int)round($cm * 567);
 }
 
-$fs = (int)($ayarlar['font_boyutu'] ?? 12) * 2; // yarım punto
-$fsBaslik = (int)($ayarlar['baslik_font_boyutu'] ?? 14) * 2;
-$li = cmToTwips((float)($ayarlar['paragraf_girinti'] ?? 1.25));
-$sl = (int)(($ayarlar['satir_araligi'] ?? 1.5) * 240); // satır aralığı
-$buyukHarf = ($ayarlar['baslik_buyuk_harf'] ?? true);
+function baslikCase(string $s, int $seviye): string {
+    $s = trim($s);
+    if ($s === '') return $s;
+    $kucuk = ['ve', 'veya', 'ile', 'de', 'da', 'ki', 'mi', 'mı', 'mu', 'mü'];
+    if ($seviye === 0) {
+        return mb_strtoupper($s, 'UTF-8');  // 1. derece: TÜMÜ BÜYÜK
+    }
+    if ($seviye === 1) {
+        $kelimeler = preg_split('/\s+/u', $s, -1, PREG_SPLIT_NO_EMPTY);
+        foreach ($kelimeler as $i => $k) {
+            $kAlt = mb_strtolower($k, 'UTF-8');
+            if ($i > 0 && in_array($kAlt, $kucuk)) {
+                $kelimeler[$i] = $kAlt;
+            } else {
+                $kelimeler[$i] = mb_strtoupper(mb_substr($k, 0, 1, 'UTF-8'), 'UTF-8') . mb_strtolower(mb_substr($k, 1, null, 'UTF-8'), 'UTF-8');
+            }
+        }
+        return implode(' ', $kelimeler);  // 2. derece: Her kelimenin ilk harfi büyük
+    }
+    $kelimeler = preg_split('/\s+/u', $s, -1, PREG_SPLIT_NO_EMPTY);
+    foreach ($kelimeler as $i => $k) {
+        $kAlt = mb_strtolower($k, 'UTF-8');
+        if ($i === 0) {
+            $kelimeler[$i] = mb_strtoupper(mb_substr($k, 0, 1, 'UTF-8'), 'UTF-8') . mb_strtolower(mb_substr($k, 1, null, 'UTF-8'), 'UTF-8');
+        } elseif (in_array($kAlt, $kucuk)) {
+            $kelimeler[$i] = $kAlt;
+        } else {
+            $kelimeler[$i] = mb_strtoupper(mb_substr($k, 0, 1, 'UTF-8'), 'UTF-8') . mb_strtolower(mb_substr($k, 1, null, 'UTF-8'), 'UTF-8');
+        }
+    }
+    return implode(' ', $kelimeler);  // 3+: İlk kelime büyük, bağlaçlar küçük
+}
+
+$fs = 24;  // 12 punto = 24 yarım punto
+$li = cmToTwips((float)($ayarlar['paragraf_girinti'] ?? 1.0));
+$sl = (int)(1.5 * 240);  // 1.5 satır aralığı
+$slTek = 240;  // 1 satır aralığı (başlıklar için)
 
 $rtf = "{\\rtf1\\ansi\\ansicpg1254\\deff0\n";
-$rtf .= "{\\fonttbl{\\f0 " . $ayarlar['font'] . ";}}\n";
+$rtf .= "{\\fonttbl{\\f0 " . ($ayarlar['font'] ?? 'Times New Roman') . ";}}\n";
 $rtf .= "\\paperw11906\\paperh16838\n";
 $rtf .= "\\margl" . cmToTwips($ayarlar['sol_kenar']) . "\\margr" . cmToTwips($ayarlar['sag_kenar']);
 $rtf .= "\\margt" . cmToTwips($ayarlar['ust_kenar']) . "\\margb" . cmToTwips($ayarlar['alt_kenar'] ?? 2.5) . "\n";
 $rtf .= "\\f0\n\n";
 
-// Kapak
-$kapakBaslik = $buyukHarf ? mb_strtoupper($proje['baslik'], 'UTF-8') : $proje['baslik'];
-$rtf .= "{\\pard\\qc\\fs" . $fsBaslik . "\\b " . rtfEscape($kapakBaslik) . "\\par}\n";
+// Kapak (dış kapak - numara yok)
+$rtf .= "{\\pard\\qc\\fs" . $fs . "\\b " . rtfEscape(mb_strtoupper($proje['baslik'], 'UTF-8')) . "\\par}\n";
 $rtf .= "{\\pard\\qc\\sa240\\par}\n";
-
 if (!empty($proje['yazar'])) {
     $rtf .= "{\\pard\\qc\\fs" . $fs . " " . rtfEscape('Hazırlayan: ' . $proje['yazar']) . "\\par}\n";
 }
@@ -78,37 +107,14 @@ if ($kurum) {
 if (!empty($proje['yil'])) {
     $rtf .= "{\\pard\\qc\\fs" . $fs . " " . rtfEscape((string)$proje['yil']) . "\\par}\n";
 }
-
 $rtf .= "{\\pard\\sa480\\par}\n";
 $rtf .= "\\page\n\n";
 
-// Bölümler (hiyerarşik)
-function bolumYaz(array $bolumler, array $parents, array $ayarlar, string &$rtf, int $seviye = 0): void {
-    $fs = (int)($ayarlar['font_boyutu'] ?? 12) * 2;
-    $fsBaslik = max(10, (int)($ayarlar['baslik_font_boyutu'] ?? 14) - $seviye * 2) * 2;
-    $li = cmToTwips((float)($ayarlar['paragraf_girinti'] ?? 1.25));
-    $sl = (int)(($ayarlar['satir_araligi'] ?? 1.5) * 240);
-    $buyukHarf = $ayarlar['baslik_buyuk_harf'] ?? true;
-    $girinti = $seviye * cmToTwips(0.5);
-
-    foreach ($bolumler as $b) {
-        $baslikMetin = $buyukHarf ? mb_strtoupper($b['baslik'], 'UTF-8') : $b['baslik'];
-        $rtf .= "{\\pard\\li" . $girinti . "\\sb240\\sa120\\fs" . $fsBaslik . "\\b " . rtfEscape($baslikMetin) . "\\par}\n";
-
-        $paragraflar = preg_split('/\n\s*\n/', trim($b['icerik'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
-        foreach ($paragraflar as $p) {
-            $p = trim($p);
-            if ($p === '') continue;
-            $rtf .= "{\\pard\\li" . ($girinti + $li) . "\\fi-" . $li . "\\sl" . $sl . " " . rtfEscape($p) . "\\par}\n";
-        }
-
-        $cocuklar = $parents[(int)$b['id']] ?? [];
-        if (!empty($cocuklar)) {
-            bolumYaz($cocuklar, $parents, $ayarlar, $rtf, $seviye + 1);
-        }
-        $rtf .= "{\\pard\\sa120\\par}\n";
-    }
-}
+// Bölümler - Kılavuz: 1., 1.1., 1.1.1. numaralandırma, başlık sonunda noktalama yok
+// 1. derece: 5 cm üstten, 12pt, TÜMÜ BÜYÜK, koyu, 1 cm girinti
+// 2. derece: 12pt, her kelime büyük, koyu, 1 cm girinti
+// 3. derece: 12pt, ilk kelime büyük, koyu, 1 cm girinti
+// Paragraf: 1 cm girinti, 1.5 satır, iki yana yaslı, paragraftan sonra boşluk (sa), aralarında ekstra satır yok
 
 $tum = $proje['bolumler'] ?? [];
 $parents = [];
@@ -124,6 +130,45 @@ foreach ($parents as &$arr) {
 }
 $kokler = $parents[0] ?? [];
 unset($parents[0]);
+
+function bolumYaz(array $bolumler, array $parents, array $ayarlar, string &$rtf, array $numara = []): void {
+    $fs = 24;
+    $li = cmToTwips(1.0);  // 1 cm girinti (kılavuz)
+    $sl = (int)(1.5 * 240);
+    $saParagraf = 120;  // paragraftan sonra boşluk
+
+    foreach ($bolumler as $i => $b) {
+        $numaraYeni = array_merge($numara, [$i + 1]);
+        $numaraStr = implode('.', $numaraYeni);
+        $seviye = count($numaraYeni) - 1;
+
+        $baslikMetin = $numaraStr . ' ' . baslikCase($b['baslik'], $seviye);
+
+        if ($seviye === 0) {
+            if (empty($numara) && $i > 0) {
+                $rtf .= "\\page\n";  // Her ana bölüm yeni sayfada (kılavuz 3.3)
+            }
+            $sb = cmToTwips(5.0);  // 1. derece: 5 cm üstten
+        } else {
+            $sb = 240;
+        }
+
+        $rtf .= "{\\pard\\li" . $li . "\\fi0\\qj\\sb" . $sb . "\\sa" . $saParagraf . "\\sl" . $slTek . "\\fs" . $fs . "\\b " . rtfEscape($baslikMetin) . "\\par}\n";
+
+        $paragraflar = preg_split('/\n\s*\n/', trim($b['icerik'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+        foreach ($paragraflar as $p) {
+            $p = trim($p);
+            if ($p === '') continue;
+            $rtf .= "{\\pard\\li0\\fi" . $li . "\\qj\\sa" . $saParagraf . "\\sl" . $sl . "\\fs" . $fs . " " . rtfEscape($p) . "\\par}\n";
+        }
+
+        $cocuklar = $parents[(int)$b['id']] ?? [];
+        if (!empty($cocuklar)) {
+            bolumYaz($cocuklar, $parents, $ayarlar, $rtf, $numaraYeni);
+        }
+    }
+}
+
 bolumYaz($kokler, $parents, $ayarlar, $rtf);
 
 $rtf .= "}\n";

@@ -274,7 +274,7 @@ function ayarlariFormaYaz(ayarlar) {
     document.getElementById('ayarSagKenar').value = ayarlar.sag_kenar ?? 2.5;
     document.getElementById('ayarUstKenar').value = ayarlar.ust_kenar ?? 2.5;
     document.getElementById('ayarAltKenar').value = ayarlar.alt_kenar ?? 2.5;
-    document.getElementById('ayarGirinti').value = ayarlar.paragraf_girinti ?? 1.25;
+    document.getElementById('ayarGirinti').value = ayarlar.paragraf_girinti ?? 1;
 }
 
 function ayarlariFormdanOku() {
@@ -288,7 +288,7 @@ function ayarlariFormdanOku() {
         sag_kenar: parseFloat(document.getElementById('ayarSagKenar').value) || 2.5,
         ust_kenar: parseFloat(document.getElementById('ayarUstKenar').value) || 2.5,
         alt_kenar: parseFloat(document.getElementById('ayarAltKenar').value) || 2.5,
-        paragraf_girinti: parseFloat(document.getElementById('ayarGirinti').value) || 1.25
+        paragraf_girinti: parseFloat(document.getElementById('ayarGirinti').value) || 1
     };
 }
 
@@ -329,7 +329,7 @@ function ayarlarVarsayilan() {
         sag_kenar: 2.5,
         ust_kenar: 2.5,
         alt_kenar: 2.5,
-        paragraf_girinti: 1.25
+        paragraf_girinti: 1
     });
 }
 
