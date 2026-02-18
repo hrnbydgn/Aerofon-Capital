@@ -79,62 +79,144 @@
 
     <!-- Ayarlar Modal -->
     <div class="modal" id="ayarlarModal">
-        <div class="modal-icerik">
-            <h3>Yazım Ayarları (YÖK Varsayılan)</h3>
-            <div class="ayar-grid">
-                <div class="form-grup">
-                    <label>Font</label>
-                    <select id="ayarFont">
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Arial">Arial</option>
-                        <option value="Calibri">Calibri</option>
-                    </select>
-                </div>
-                <div class="form-grup">
-                    <label>Font Boyutu (pt)</label>
-                    <input type="number" id="ayarFontBoyutu" min="10" max="14" value="12">
-                </div>
-                <div class="form-grup">
-                    <label>Satır Aralığı</label>
-                    <select id="ayarSatirAraligi">
-                        <option value="1">Tek</option>
-                        <option value="1.15">1.15</option>
-                        <option value="1.5" selected>1.5 (YÖK)</option>
-                        <option value="2">Çift</option>
-                    </select>
-                </div>
-                <div class="form-grup">
-                    <label>Başlık Font Boyutu (pt)</label>
-                    <input type="number" id="ayarBaslikFont" min="12" max="18" value="14">
-                </div>
-                <div class="form-grup">
-                    <label>Başlıkları Büyük Harf</label>
-                    <select id="ayarBaslikBuyuk">
-                        <option value="1" selected>Evet</option>
-                        <option value="0">Hayır</option>
-                    </select>
-                </div>
-                <div class="form-grup">
-                    <label>Sol Kenar (cm)</label>
-                    <input type="number" id="ayarSolKenar" min="2" max="6" step="0.5" value="4">
-                </div>
-                <div class="form-grup">
-                    <label>Sağ Kenar (cm)</label>
-                    <input type="number" id="ayarSagKenar" min="1" max="4" step="0.5" value="2.5">
-                </div>
-                <div class="form-grup">
-                    <label>Üst/Alt Kenar (cm)</label>
-                    <input type="number" id="ayarUstKenar" min="1" max="4" step="0.5" value="2.5">
-                </div>
-                <div class="form-grup">
-                    <label>Paragraf Girinti (cm)</label>
-                    <input type="number" id="ayarGirinti" min="0.5" max="2" step="0.25" value="1">
-                </div>
-                <div class="form-grup">
-                    <label>Alt Kenar (cm)</label>
-                    <input type="number" id="ayarAltKenar" min="1" max="4" step="0.5" value="2.5">
+        <div class="modal-icerik modal-icerik-genis">
+            <h3>Yazım Ayarları</h3>
+            <div class="ayar-sekmeler">
+                <button type="button" class="ayar-sekme aktif" data-sekme="sayfa">Sayfa & Metin</button>
+                <button type="button" class="ayar-sekme" data-sekme="kenar">Kenar Boşlukları</button>
+                <button type="button" class="ayar-sekme" data-sekme="tablo">Tablo</button>
+                <button type="button" class="ayar-sekme" data-sekme="sekil">Şekil</button>
+            </div>
+
+            <div class="ayar-panel aktif" id="panel-sayfa">
+                <h4>Sayfa & Metin</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>Font</label>
+                        <select id="ayarFont">
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Calibri">Calibri</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Font Boyutu (pt)</label>
+                        <input type="number" id="ayarFontBoyutu" min="10" max="14" value="12">
+                    </div>
+                    <div class="form-grup">
+                        <label>Satır Aralığı</label>
+                        <select id="ayarSatirAraligi">
+                            <option value="1">Tek</option>
+                            <option value="1.15">1.15</option>
+                            <option value="1.5" selected>1.5 (YÖK)</option>
+                            <option value="2">Çift</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Başlık Font (pt)</label>
+                        <input type="number" id="ayarBaslikFont" min="10" max="14" value="12">
+                    </div>
+                    <div class="form-grup">
+                        <label>Paragraf Girinti (cm)</label>
+                        <input type="number" id="ayarGirinti" min="0.5" max="2" step="0.25" value="1">
+                    </div>
                 </div>
             </div>
+
+            <div class="ayar-panel" id="panel-kenar">
+                <h4>Kenar Boşlukları</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>Sol Kenar (cm)</label>
+                        <input type="number" id="ayarSolKenar" min="2" max="6" step="0.5" value="4">
+                    </div>
+                    <div class="form-grup">
+                        <label>Sağ Kenar (cm)</label>
+                        <input type="number" id="ayarSagKenar" min="1" max="4" step="0.5" value="2.5">
+                    </div>
+                    <div class="form-grup">
+                        <label>Bölüm Başında Üst (cm)</label>
+                        <input type="number" id="ayarUstBolum" min="2" max="8" step="0.5" value="5" title="Ana bölüm sayfası üst boşluk">
+                    </div>
+                    <div class="form-grup">
+                        <label>Diğer Sayfalarda Üst (cm)</label>
+                        <input type="number" id="ayarUstKenar" min="1" max="4" step="0.5" value="2.5">
+                    </div>
+                    <div class="form-grup">
+                        <label>Alt Kenar (cm)</label>
+                        <input type="number" id="ayarAltKenar" min="1" max="4" step="0.5" value="2.5">
+                    </div>
+                </div>
+            </div>
+
+            <div class="ayar-panel" id="panel-tablo">
+                <h4>Tablo Biçimi</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>Tablo Font (pt)</label>
+                        <input type="number" id="ayarTabloFont" min="8" max="14" value="12">
+                    </div>
+                    <div class="form-grup">
+                        <label>Tablo Satır Aralığı</label>
+                        <select id="ayarTabloSatir">
+                            <option value="1" selected>Tek</option>
+                            <option value="1.15">1.15</option>
+                            <option value="1.5">1.5</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Tablo Yazısı Font (pt)</label>
+                        <input type="number" id="ayarTabloYaziFont" min="8" max="14" value="12">
+                    </div>
+                    <div class="form-grup">
+                        <label>Tablo Yazısı Konumu</label>
+                        <select id="ayarTabloYaziKonum">
+                            <option value="ust_sol" selected>Üstte, sola yaslı</option>
+                            <option value="ust_orta">Üstte, ortada</option>
+                            <option value="alt_sol">Altta, sola yaslı</option>
+                            <option value="alt_orta">Altta, ortada</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Tablo Yazısı Kalın</label>
+                        <select id="ayarTabloYaziKalin">
+                            <option value="1" selected>Evet</option>
+                            <option value="0">Hayır</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ayar-panel" id="panel-sekil">
+                <h4>Şekil Yazısı</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>Şekil Yazısı Font (pt)</label>
+                        <input type="number" id="ayarSekilFont" min="8" max="14" value="12">
+                    </div>
+                    <div class="form-grup">
+                        <label>Şekil Yazısı Konumu</label>
+                        <select id="ayarSekilKonum">
+                            <option value="alt_orta" selected>Altta, ortada</option>
+                            <option value="alt_sol">Altta, sola yaslı</option>
+                            <option value="ust_orta">Üstte, ortada</option>
+                            <option value="ust_sol">Üstte, sola yaslı</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Şekil Yazısı Kalın</label>
+                        <select id="ayarSekilKalin">
+                            <option value="1" selected>Evet</option>
+                            <option value="0">Hayır</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Kaynak Font (pt)</label>
+                        <input type="number" id="ayarKaynakFont" min="8" max="12" value="10" title="Tablo/şekil kaynağı">
+                    </div>
+                </div>
+            </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="ayarlarVarsayilan">Varsayılana Dön</button>
                 <button type="button" class="btn btn-primary" id="ayarlarKaydet">Kaydet</button>

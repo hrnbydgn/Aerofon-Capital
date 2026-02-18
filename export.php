@@ -13,7 +13,6 @@ if (!$id) {
 
 $proje = getProjeById($id);
 
-// Kılavuz: 12pt TNR, 1.5 satır, 1cm girinti, 4/2.5/2.5/2.5 cm kenarlar
 $ayarlar = array_merge([
     'font' => 'Times New Roman',
     'font_boyutu' => 12,
@@ -21,8 +20,18 @@ $ayarlar = array_merge([
     'sol_kenar' => 4.0,
     'sag_kenar' => 2.5,
     'ust_kenar' => 2.5,
+    'ust_bolum' => 5.0,
     'alt_kenar' => 2.5,
-    'paragraf_girinti' => 1.0,  // Kılavuz: 1 cm
+    'paragraf_girinti' => 1.0,
+    'tablo_font' => 12,
+    'tablo_satir' => 1,
+    'tablo_yazi_font' => 12,
+    'tablo_yazi_konum' => 'ust_sol',
+    'tablo_yazi_kalin' => true,
+    'sekil_font' => 12,
+    'sekil_konum' => 'alt_orta',
+    'sekil_kalin' => true,
+    'kaynak_font' => 10,
 ], $proje['ayarlar'] ?? []);
 
 function rtfEscape(string $s): string {
@@ -146,11 +155,11 @@ function bolumYaz(array $bolumler, array $parents, array $ayarlar, string &$rtf,
 
         if ($seviye === 0) {
             if (empty($numara) && $i > 0) {
-                $rtf .= "\\page\n";  // Her ana bölüm yeni sayfada (kılavuz 3.3)
+                $rtf .= "\\page\n";  // Her ana bölüm yeni sayfada
             }
-            $sb = cmToTwips(5.0);  // 1. derece: 5 cm üstten
+            $sb = cmToTwips((float)($ayarlar['ust_bolum'] ?? 5.0));  // Bölüm başında üst
         } else {
-            $sb = 240;
+            $sb = 240;  // Alt başlıklar: normal boşluk
         }
 
         $rtf .= "{\\pard\\li" . $li . "\\fi0\\qj\\sb" . $sb . "\\sa" . $saParagraf . "\\sl" . $slTek . "\\fs" . $fs . "\\b " . rtfEscape($baslikMetin) . "\\par}\n";
