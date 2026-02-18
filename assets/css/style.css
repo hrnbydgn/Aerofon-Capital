@@ -548,7 +548,72 @@ body {
 }
 
 .modal-icerik-genis {
-    max-width: 520px;
+    max-width: 560px;
+}
+
+.ayar-onizleme {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    font-family: 'Times New Roman', serif;
+}
+
+.ayar-onizleme .onizleme-baslik1 {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.ayar-onizleme .onizleme-baslik2 {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.ayar-onizleme .onizleme-paragraf {
+    font-size: 12pt;
+    line-height: 1.5;
+}
+
+.ayar-tablo-onizleme .tablo-onizleme-caption {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.ayar-tablo-onizleme .tablo-onizleme-tablo {
+    width: 100%;
+    font-size: 12pt;
+    border-collapse: collapse;
+}
+
+.ayar-tablo-onizleme .tablo-onizleme-tablo th,
+.ayar-tablo-onizleme .tablo-onizleme-tablo td {
+    border: 1px solid var(--border);
+    padding: 2mm;
+}
+
+.ayar-tablo-onizleme .tablo-onizleme-kaynak {
+    font-size: 10pt;
+    margin-top: 4px;
+}
+
+.ayar-sekil-onizleme .sekil-onizleme-placeholder {
+    border: 2px dashed var(--border);
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    margin: 6pt 0;
+}
+
+.ayar-sekil-onizleme .sekil-onizleme-caption {
+    font-size: 12pt;
+    font-weight: bold;
+    text-align: center;
+}
+
+.ayar-sekil-onizleme .sekil-onizleme-kaynak {
+    font-size: 10pt;
 }
 
 .ayar-sekmeler {

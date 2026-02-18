@@ -34,6 +34,10 @@ function olaylariBagla() {
             document.getElementById('panel-' + btn.dataset.sekme).classList.add('aktif');
         });
     });
+    AYAR_INPUT_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', onizlemeGuncelle), el.addEventListener('change', onizlemeGuncelle);
+    });
 }
 
 async function projeleriYukle() {
@@ -480,23 +484,36 @@ async function wordIndir() {
 
 function ayarlarAc() {
     document.getElementById('ayarlarModal').classList.add('aktif');
+    onizlemeGuncelle();
 }
 
 function ayarlarKapat() {
     document.getElementById('ayarlarModal').classList.remove('aktif');
 }
 
+const AYAR_INPUT_IDS = ['ayarFont','ayarFontBoyutu','ayarSatirAraligi','ayarGirinti','ayarParagrafOncesi','ayarParagrafSonrasi','ayarBaslik1Font','ayarBaslik1Buyuk','ayarBaslik2Font','ayarBaslik3Font','ayarSolKenar','ayarSagKenar','ayarUstBolum','ayarUstKenar','ayarAltKenar','ayarCiltPayi','ayarTabloFont','ayarTabloSatir','ayarTabloHizalama','ayarTabloBaslikKalin','ayarTabloYaziFont','ayarTabloYaziKonum','ayarTabloYaziKalin','ayarTabloKenarlikKalin','ayarTabloKenarlikStil','ayarTabloDisKenarlik','ayarTabloIcKenarlik','ayarTabloPaddingUst','ayarTabloPaddingAlt','ayarTabloPaddingSol','ayarTabloPaddingSag','ayarTabloUstBosluk','ayarTabloAltBosluk','ayarTabloGenislik','ayarTabloOrtala','ayarSekilFont','ayarSekilKonum','ayarSekilKalin','ayarKaynakFont','ayarSekilUstBosluk','ayarSekilAltBosluk'];
+
 function ayarlariFormaYaz(ayarlar) {
-    document.getElementById('ayarFont').value = ayarlar.font || 'Times New Roman';
-    document.getElementById('ayarFontBoyutu').value = ayarlar.font_boyutu ?? 12;
-    document.getElementById('ayarSatirAraligi').value = ayarlar.satir_araligi ?? 1.5;
-    document.getElementById('ayarBaslikFont').value = ayarlar.baslik_font_boyutu ?? 12;
-    document.getElementById('ayarSolKenar').value = ayarlar.sol_kenar ?? 4;
-    document.getElementById('ayarSagKenar').value = ayarlar.sag_kenar ?? 2.5;
-    document.getElementById('ayarUstBolum').value = ayarlar.ust_bolum ?? 5;
-    document.getElementById('ayarUstKenar').value = ayarlar.ust_kenar ?? 2.5;
-    document.getElementById('ayarAltKenar').value = ayarlar.alt_kenar ?? 2.5;
-    document.getElementById('ayarGirinti').value = ayarlar.paragraf_girinti ?? 1;
+    const el = id => document.getElementById(id);
+    if (!el('ayarFont')) return;
+    el('ayarFont').value = ayarlar.font || 'Times New Roman';
+    el('ayarFontBoyutu').value = ayarlar.font_boyutu ?? 12;
+    el('ayarSatirAraligi').value = ayarlar.satir_araligi ?? 1.5;
+    el('ayarGirinti').value = ayarlar.paragraf_girinti ?? 1;
+    el('ayarBaslik1Font').value = ayarlar.baslik1_font ?? ayarlar.baslik_font_boyutu ?? 12;
+    el('ayarBaslik1Buyuk').value = ayarlar.baslik1_buyuk !== false ? '1' : '0';
+    el('ayarBaslik2Font').value = ayarlar.baslik2_font ?? 12;
+    el('ayarBaslik3Font').value = ayarlar.baslik3_font ?? 12;
+    el('ayarSolKenar').value = ayarlar.sol_kenar ?? 4;
+    el('ayarSagKenar').value = ayarlar.sag_kenar ?? 2.5;
+    el('ayarUstBolum').value = ayarlar.ust_bolum ?? 5;
+    el('ayarUstKenar').value = ayarlar.ust_kenar ?? 2.5;
+    el('ayarAltKenar').value = ayarlar.alt_kenar ?? 2.5;
+    if (el('ayarCiltPayi')) el('ayarCiltPayi').value = ayarlar.cilt_payi ?? 0;
+    if (el('ayarParagrafOncesi')) el('ayarParagrafOncesi').value = ayarlar.paragraf_oncesi ?? 0;
+    if (el('ayarParagrafSonrasi')) el('ayarParagrafSonrasi').value = ayarlar.paragraf_sonrasi ?? 6;
+    if (el('ayarSekilUstBosluk')) el('ayarSekilUstBosluk').value = ayarlar.sekil_ust_bosluk ?? 6;
+    if (el('ayarSekilAltBosluk')) el('ayarSekilAltBosluk').value = ayarlar.sekil_alt_bosluk ?? 6;
     document.getElementById('ayarTabloFont').value = ayarlar.tablo_font ?? 12;
     document.getElementById('ayarTabloSatir').value = ayarlar.tablo_satir ?? 1;
     document.getElementById('ayarTabloHizalama').value = ayarlar.tablo_hizalama ?? 'sol';
@@ -520,20 +537,31 @@ function ayarlariFormaYaz(ayarlar) {
     document.getElementById('ayarSekilKonum').value = ayarlar.sekil_konum ?? 'alt_orta';
     document.getElementById('ayarSekilKalin').value = ayarlar.sekil_kalin !== false ? '1' : '0';
     document.getElementById('ayarKaynakFont').value = ayarlar.kaynak_font ?? 10;
+    if (el('ayarSekilUstBosluk')) el('ayarSekilUstBosluk').value = ayarlar.sekil_ust_bosluk ?? 6;
+    if (el('ayarSekilAltBosluk')) el('ayarSekilAltBosluk').value = ayarlar.sekil_alt_bosluk ?? 6;
 }
 
 function ayarlariFormdanOku() {
+    const g = (id, def) => { const e = document.getElementById(id); return e ? (parseFloat(e.value) || def) : def; };
+    const s = (id, def) => { const e = document.getElementById(id); return e ? e.value : def; };
     return {
-        font: document.getElementById('ayarFont').value,
-        font_boyutu: parseInt(document.getElementById('ayarFontBoyutu').value) || 12,
-        satir_araligi: parseFloat(document.getElementById('ayarSatirAraligi').value) || 1.5,
-        baslik_font_boyutu: parseInt(document.getElementById('ayarBaslikFont').value) || 12,
-        sol_kenar: parseFloat(document.getElementById('ayarSolKenar').value) || 4,
-        sag_kenar: parseFloat(document.getElementById('ayarSagKenar').value) || 2.5,
-        ust_bolum: parseFloat(document.getElementById('ayarUstBolum').value) || 5,
-        ust_kenar: parseFloat(document.getElementById('ayarUstKenar').value) || 2.5,
-        alt_kenar: parseFloat(document.getElementById('ayarAltKenar').value) || 2.5,
-        paragraf_girinti: parseFloat(document.getElementById('ayarGirinti').value) || 1,
+        font: s('ayarFont', 'Times New Roman'),
+        font_boyutu: parseInt(document.getElementById('ayarFontBoyutu')?.value) || 12,
+        satir_araligi: parseFloat(document.getElementById('ayarSatirAraligi')?.value) || 1.5,
+        baslik_font_boyutu: parseInt(document.getElementById('ayarBaslik1Font')?.value) || 12,
+        baslik1_font: parseInt(document.getElementById('ayarBaslik1Font')?.value) || 12,
+        baslik1_buyuk: document.getElementById('ayarBaslik1Buyuk')?.value !== '0',
+        baslik2_font: parseInt(document.getElementById('ayarBaslik2Font')?.value) || 12,
+        baslik3_font: parseInt(document.getElementById('ayarBaslik3Font')?.value) || 12,
+        paragraf_oncesi: g('ayarParagrafOncesi', 0),
+        paragraf_sonrasi: g('ayarParagrafSonrasi', 6),
+        sol_kenar: g('ayarSolKenar', 4),
+        sag_kenar: g('ayarSagKenar', 2.5),
+        ust_bolum: g('ayarUstBolum', 5),
+        ust_kenar: g('ayarUstKenar', 2.5),
+        alt_kenar: g('ayarAltKenar', 2.5),
+        cilt_payi: g('ayarCiltPayi', 0),
+        paragraf_girinti: g('ayarGirinti', 1),
         tablo_font: parseInt(document.getElementById('ayarTabloFont').value) || 12,
         tablo_satir: parseFloat(document.getElementById('ayarTabloSatir').value) || 1,
         tablo_hizalama: document.getElementById('ayarTabloHizalama').value || 'sol',
@@ -553,11 +581,63 @@ function ayarlariFormdanOku() {
         tablo_alt_bosluk: parseFloat(document.getElementById('ayarTabloAltBosluk').value) || 0.5,
         tablo_genislik: document.getElementById('ayarTabloGenislik').value === 'otomatik' ? 'otomatik' : (parseInt(document.getElementById('ayarTabloGenislik').value) || 100),
         tablo_ortala: document.getElementById('ayarTabloOrtala').value === '1',
-        sekil_font: parseInt(document.getElementById('ayarSekilFont').value) || 12,
-        sekil_konum: document.getElementById('ayarSekilKonum').value || 'alt_orta',
-        sekil_kalin: document.getElementById('ayarSekilKalin').value === '1',
-        kaynak_font: parseInt(document.getElementById('ayarKaynakFont').value) || 10
+        sekil_font: parseInt(document.getElementById('ayarSekilFont')?.value) || 12,
+        sekil_konum: document.getElementById('ayarSekilKonum')?.value || 'alt_orta',
+        sekil_kalin: document.getElementById('ayarSekilKalin')?.value !== '0',
+        sekil_ust_bosluk: g('ayarSekilUstBosluk', 6),
+        sekil_alt_bosluk: g('ayarSekilAltBosluk', 6),
+        kaynak_font: parseInt(document.getElementById('ayarKaynakFont')?.value) || 10
     };
+}
+
+function onizlemeGuncelle() {
+    try {
+        const a = ayarlariFormdanOku();
+        const font = a.font || 'Times New Roman';
+        const sayfaEl = document.getElementById('sayfaOnizleme');
+        if (sayfaEl) {
+            sayfaEl.style.fontFamily = font;
+            const b1 = sayfaEl.querySelector('.onizleme-baslik1');
+            if (b1) b1.style.cssText = `font-size:${a.baslik1_font || 12}pt;font-weight:bold;${a.baslik1_buyuk !== false ? 'text-transform:uppercase' : ''};margin-bottom:${a.paragraf_sonrasi || 6}pt`;
+            const b2 = sayfaEl.querySelector('.onizleme-baslik2');
+            if (b2) b2.style.cssText = `font-size:${a.baslik2_font || 12}pt;font-weight:bold;margin:${a.paragraf_sonrasi || 6}pt 0`;
+            const p = sayfaEl.querySelector('.onizleme-paragraf');
+            if (p) p.style.cssText = `font-size:${a.font_boyutu || 12}pt;line-height:${a.satir_araligi || 1.5};text-indent:${(a.paragraf_girinti || 1) * 10}mm;margin:${a.paragraf_sonrasi || 6}pt 0`;
+        }
+        const tabloEl = document.getElementById('tabloOnizleme');
+        if (tabloEl) {
+            const tabloFont = a.tablo_font || 12;
+            const tabloYaziFont = a.tablo_yazi_font || 12;
+            const kaynakFont = a.kaynak_font || 10;
+            tabloEl.style.fontFamily = font;
+            const cap = tabloEl.querySelector('.tablo-onizleme-caption');
+            if (cap) cap.style.cssText = `font-size:${tabloYaziFont}pt;font-weight:${a.tablo_yazi_kalin ? 'bold' : 'normal'};margin-bottom:4px`;
+            const tbl = tabloEl.querySelector('.tablo-onizleme-tablo');
+            if (tbl) {
+                tbl.style.fontSize = tabloFont + 'pt';
+                tbl.style.borderCollapse = 'collapse';
+                tbl.style.border = a.tablo_dis_kenarlik !== false ? `${a.tablo_kenarlik_kalin || 1}px ${a.tablo_kenarlik_stil === 'cift' ? 'double' : a.tablo_kenarlik_stil === 'noktali' ? 'dotted' : 'solid'} var(--border)` : 'none';
+                tabloEl.querySelectorAll('.tablo-onizleme-tablo th, .tablo-onizleme-tablo td').forEach(cell => {
+                    cell.style.padding = `${a.tablo_padding_ust || 1.5}mm ${a.tablo_padding_sag || 2}mm ${a.tablo_padding_alt || 1.5}mm ${a.tablo_padding_sol || 2}mm`;
+                    cell.style.border = a.tablo_ic_kenarlik !== false ? `1px ${a.tablo_kenarlik_stil === 'cift' ? 'double' : 'solid'} var(--border)` : 'none';
+                    cell.style.fontWeight = a.tablo_baslik_kalin && cell.tagName === 'TH' ? 'bold' : 'normal';
+                    cell.style.textAlign = a.tablo_hizalama === 'orta' ? 'center' : a.tablo_hizalama === 'sag' ? 'right' : 'left';
+                });
+            }
+            const src = tabloEl.querySelector('.tablo-onizleme-kaynak');
+            if (src) src.style.cssText = `font-size:${kaynakFont}pt;margin-top:4px;color:var(--text-muted)`;
+        }
+        const sekilEl = document.getElementById('sekilOnizleme');
+        if (sekilEl) {
+            sekilEl.style.fontFamily = font;
+            const ph = sekilEl.querySelector('.sekil-onizleme-placeholder');
+            if (ph) ph.style.margin = `${a.sekil_ust_bosluk || 6}pt 0`;
+            const cap = sekilEl.querySelector('.sekil-onizleme-caption');
+            if (cap) cap.style.cssText = `font-size:${a.sekil_font || 12}pt;font-weight:${a.sekil_kalin ? 'bold' : 'normal'};text-align:${a.sekil_konum === 'alt_orta' || a.sekil_konum === 'ust_orta' ? 'center' : 'left'};margin:${a.sekil_alt_bosluk || 6}pt 0`;
+            const src = sekilEl.querySelector('.sekil-onizleme-kaynak');
+            if (src) src.style.cssText = `font-size:${a.kaynak_font || 10}pt;color:var(--text-muted)`;
+        }
+    } catch (e) { console.warn('Önizleme güncellenemedi', e); }
 }
 
 function ayarlarKaydet() {
@@ -591,12 +671,18 @@ function ayarlarVarsayilan() {
         font: 'Times New Roman',
         font_boyutu: 12,
         satir_araligi: 1.5,
-        baslik_font_boyutu: 12,
+        baslik1_font: 12,
+        baslik1_buyuk: true,
+        baslik2_font: 12,
+        baslik3_font: 12,
+        paragraf_oncesi: 0,
+        paragraf_sonrasi: 6,
         sol_kenar: 4,
         sag_kenar: 2.5,
         ust_bolum: 5,
         ust_kenar: 2.5,
         alt_kenar: 2.5,
+        cilt_payi: 0,
         paragraf_girinti: 1,
         tablo_font: 12,
         tablo_satir: 1,
@@ -620,8 +706,11 @@ function ayarlarVarsayilan() {
         sekil_font: 12,
         sekil_konum: 'alt_orta',
         sekil_kalin: true,
+        sekil_ust_bosluk: 6,
+        sekil_alt_bosluk: 6,
         kaynak_font: 10
     });
+    onizlemeGuncelle();
 }
 
 function escapeHtml(s) {

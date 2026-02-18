@@ -89,62 +89,103 @@
             </div>
 
             <div class="ayar-panel aktif" id="panel-sayfa">
-                <h4>Sayfa & Metin</h4>
+                <h4>Metin</h4>
                 <div class="ayar-grid">
                     <div class="form-grup">
-                        <label>Font</label>
+                        <label>Metin Fontu</label>
                         <select id="ayarFont">
                             <option value="Times New Roman">Times New Roman</option>
                             <option value="Arial">Arial</option>
                             <option value="Calibri">Calibri</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Garamond">Garamond</option>
+                            <option value="Palatino Linotype">Palatino Linotype</option>
                         </select>
                     </div>
                     <div class="form-grup">
-                        <label>Font Boyutu (pt)</label>
-                        <input type="number" id="ayarFontBoyutu" min="10" max="14" value="12">
+                        <label>Metin Boyutu (pt)</label>
+                        <input type="number" id="ayarFontBoyutu" min="9" max="14" value="12">
                     </div>
                     <div class="form-grup">
                         <label>Satır Aralığı</label>
                         <select id="ayarSatirAraligi">
                             <option value="1">Tek</option>
+                            <option value="1.2">1.2</option>
+                            <option value="1.25">1.25</option>
                             <option value="1.15">1.15</option>
                             <option value="1.5" selected>1.5 (YÖK)</option>
                             <option value="2">Çift</option>
                         </select>
                     </div>
                     <div class="form-grup">
-                        <label>Başlık Font (pt)</label>
-                        <input type="number" id="ayarBaslikFont" min="10" max="14" value="12">
+                        <label>Paragraf Girinti (cm)</label>
+                        <input type="number" id="ayarGirinti" min="0" max="2" step="0.25" value="1">
                     </div>
                     <div class="form-grup">
-                        <label>Paragraf Girinti (cm)</label>
-                        <input type="number" id="ayarGirinti" min="0.5" max="2" step="0.25" value="1">
+                        <label>Paragraf Öncesi Boşluk (pt)</label>
+                        <input type="number" id="ayarParagrafOncesi" min="0" max="24" value="0">
                     </div>
+                    <div class="form-grup">
+                        <label>Paragraf Sonrası Boşluk (pt)</label>
+                        <input type="number" id="ayarParagrafSonrasi" min="0" max="24" value="6">
+                    </div>
+                </div>
+                <h4>Başlıklar</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>1. Derece Font (pt)</label>
+                        <input type="number" id="ayarBaslik1Font" min="10" max="18" value="12">
+                    </div>
+                    <div class="form-grup">
+                        <label>1. Derece Büyük Harf</label>
+                        <select id="ayarBaslik1Buyuk">
+                            <option value="1" selected>Evet</option>
+                            <option value="0">Hayır</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>2. Derece Font (pt)</label>
+                        <input type="number" id="ayarBaslik2Font" min="10" max="16" value="12">
+                    </div>
+                    <div class="form-grup">
+                        <label>3. Derece Font (pt)</label>
+                        <input type="number" id="ayarBaslik3Font" min="10" max="14" value="12">
+                    </div>
+                </div>
+                <h4>Önizleme</h4>
+                <div class="ayar-onizleme" id="sayfaOnizleme">
+                    <div class="onizleme-baslik1">1. GİRİŞ</div>
+                    <div class="onizleme-baslik2">1.1. Alt Başlık Örneği</div>
+                    <div class="onizleme-paragraf">Bu bir paragraf örneğidir. Tez metninde kullanılacak font, satır aralığı ve girinti ayarları burada görüntülenir.</div>
                 </div>
             </div>
 
             <div class="ayar-panel" id="panel-kenar">
-                <h4>Kenar Boşlukları</h4>
+                <h4>Kenar Boşlukları (cm)</h4>
                 <div class="ayar-grid">
                     <div class="form-grup">
-                        <label>Sol Kenar (cm)</label>
+                        <label>Sol Kenar</label>
                         <input type="number" id="ayarSolKenar" min="2" max="6" step="0.5" value="4">
                     </div>
                     <div class="form-grup">
-                        <label>Sağ Kenar (cm)</label>
+                        <label>Sağ Kenar</label>
                         <input type="number" id="ayarSagKenar" min="1" max="4" step="0.5" value="2.5">
                     </div>
                     <div class="form-grup">
-                        <label>Bölüm Başında Üst (cm)</label>
-                        <input type="number" id="ayarUstBolum" min="2" max="8" step="0.5" value="5" title="Ana bölüm sayfası üst boşluk">
+                        <label>Bölüm Başında Üst</label>
+                        <input type="number" id="ayarUstBolum" min="2" max="8" step="0.5" value="5">
                     </div>
                     <div class="form-grup">
-                        <label>Diğer Sayfalarda Üst (cm)</label>
+                        <label>Diğer Sayfalarda Üst</label>
                         <input type="number" id="ayarUstKenar" min="1" max="4" step="0.5" value="2.5">
                     </div>
                     <div class="form-grup">
-                        <label>Alt Kenar (cm)</label>
+                        <label>Alt Kenar</label>
                         <input type="number" id="ayarAltKenar" min="1" max="4" step="0.5" value="2.5">
+                    </div>
+                    <div class="form-grup">
+                        <label>Cilt Payı (sol ek)</label>
+                        <input type="number" id="ayarCiltPayi" min="0" max="2" step="0.25" value="0">
                     </div>
                 </div>
             </div>
@@ -284,17 +325,27 @@
                         </select>
                     </div>
                 </div>
+                <h4>Önizleme</h4>
+                <div class="ayar-onizleme ayar-tablo-onizleme" id="tabloOnizleme">
+                    <div class="tablo-onizleme-caption">Tablo 1.1: Örnek Tablo Başlığı</div>
+                    <table class="tablo-onizleme-tablo">
+                        <tr><th>Başlık 1</th><th>Başlık 2</th></tr>
+                        <tr><td>Hücre 1</td><td>Hücre 2</td></tr>
+                        <tr><td>Veri A</td><td>Veri B</td></tr>
+                    </table>
+                    <div class="tablo-onizleme-kaynak">Kaynak: Örnek kaynak (2024)</div>
+                </div>
             </div>
 
             <div class="ayar-panel" id="panel-sekil">
                 <h4>Şekil Yazısı</h4>
                 <div class="ayar-grid">
                     <div class="form-grup">
-                        <label>Şekil Yazısı Font (pt)</label>
+                        <label>Şekil Font (pt)</label>
                         <input type="number" id="ayarSekilFont" min="8" max="14" value="12">
                     </div>
                     <div class="form-grup">
-                        <label>Şekil Yazısı Konumu</label>
+                        <label>Konum</label>
                         <select id="ayarSekilKonum">
                             <option value="alt_orta" selected>Altta, ortada</option>
                             <option value="alt_sol">Altta, sola yaslı</option>
@@ -303,7 +354,7 @@
                         </select>
                     </div>
                     <div class="form-grup">
-                        <label>Şekil Yazısı Kalın</label>
+                        <label>Kalın</label>
                         <select id="ayarSekilKalin">
                             <option value="1" selected>Evet</option>
                             <option value="0">Hayır</option>
@@ -311,8 +362,22 @@
                     </div>
                     <div class="form-grup">
                         <label>Kaynak Font (pt)</label>
-                        <input type="number" id="ayarKaynakFont" min="8" max="12" value="10" title="Tablo/şekil kaynağı">
+                        <input type="number" id="ayarKaynakFont" min="8" max="12" value="10">
                     </div>
+                    <div class="form-grup">
+                        <label>Şekil Üst Boşluk (pt)</label>
+                        <input type="number" id="ayarSekilUstBosluk" min="0" max="24" value="6">
+                    </div>
+                    <div class="form-grup">
+                        <label>Şekil Alt Boşluk (pt)</label>
+                        <input type="number" id="ayarSekilAltBosluk" min="0" max="24" value="6">
+                    </div>
+                </div>
+                <h4>Önizleme</h4>
+                <div class="ayar-onizleme ayar-sekil-onizleme" id="sekilOnizleme">
+                    <div class="sekil-onizleme-placeholder">[Şekil alanı]</div>
+                    <div class="sekil-onizleme-caption">Şekil 1.1: Örnek şekil açıklaması</div>
+                    <div class="sekil-onizleme-kaynak">Kaynak: Örnek kaynak</div>
                 </div>
             </div>
 
