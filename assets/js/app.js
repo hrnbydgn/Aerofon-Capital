@@ -16,7 +16,7 @@ function olaylariBagla() {
     document.getElementById('ayarlarVarsayilan').addEventListener('click', ayarlarVarsayilan);
     document.getElementById('wordIndir').addEventListener('click', wordIndir);
     document.getElementById('kaydetBtn').addEventListener('click', projeKaydet);
-    document.getElementById('bolumEkle').addEventListener('click', bolumEkle);
+    document.getElementById('bolumEkle').addEventListener('click', () => bolumEkle(0));
     document.getElementById('ayarlarModal').addEventListener('click', (e) => {
         if (e.target.id === 'ayarlarModal') ayarlarKapat();
     });
