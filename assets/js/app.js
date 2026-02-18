@@ -32,12 +32,14 @@ function olaylariBagla() {
             document.querySelectorAll('.ayar-panel').forEach(p => p.classList.remove('aktif'));
             btn.classList.add('aktif');
             document.getElementById('panel-' + btn.dataset.sekme).classList.add('aktif');
+            onizlemeGuncelle();
         });
     });
-    AYAR_INPUT_IDS.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', onizlemeGuncelle), el.addEventListener('change', onizlemeGuncelle);
-    });
+    const ayarlarModal = document.getElementById('ayarlarModal');
+    if (ayarlarModal) {
+        ayarlarModal.addEventListener('input', onizlemeGuncelle);
+        ayarlarModal.addEventListener('change', onizlemeGuncelle);
+    }
 }
 
 async function projeleriYukle() {
@@ -491,8 +493,6 @@ function ayarlarKapat() {
     document.getElementById('ayarlarModal').classList.remove('aktif');
 }
 
-const AYAR_INPUT_IDS = ['ayarFont','ayarFontBoyutu','ayarSatirAraligi','ayarGirinti','ayarParagrafOncesi','ayarParagrafSonrasi','ayarBaslik1Font','ayarBaslik1Buyuk','ayarBaslik2Font','ayarBaslik3Font','ayarSolKenar','ayarSagKenar','ayarUstBolum','ayarUstKenar','ayarAltKenar','ayarCiltPayi','ayarTabloFont','ayarTabloSatir','ayarTabloHizalama','ayarTabloBaslikKalin','ayarTabloYaziFont','ayarTabloYaziKonum','ayarTabloYaziKalin','ayarTabloKenarlikKalin','ayarTabloKenarlikStil','ayarTabloDisKenarlik','ayarTabloIcKenarlik','ayarTabloPaddingUst','ayarTabloPaddingAlt','ayarTabloPaddingSol','ayarTabloPaddingSag','ayarTabloUstBosluk','ayarTabloAltBosluk','ayarTabloGenislik','ayarTabloOrtala','ayarSekilFont','ayarSekilKonum','ayarSekilKalin','ayarKaynakFont','ayarSekilUstBosluk','ayarSekilAltBosluk'];
-
 function ayarlariFormaYaz(ayarlar) {
     const el = id => document.getElementById(id);
     if (!el('ayarFont')) return;
@@ -636,6 +636,15 @@ function onizlemeGuncelle() {
             if (cap) cap.style.cssText = `font-size:${a.sekil_font || 12}pt;font-weight:${a.sekil_kalin ? 'bold' : 'normal'};text-align:${a.sekil_konum === 'alt_orta' || a.sekil_konum === 'ust_orta' ? 'center' : 'left'};margin:${a.sekil_alt_bosluk || 6}pt 0`;
             const src = sekilEl.querySelector('.sekil-onizleme-kaynak');
             if (src) src.style.cssText = `font-size:${a.kaynak_font || 10}pt;color:var(--text-muted)`;
+        }
+        const kenarEl = document.getElementById('kenarOnizleme');
+        if (kenarEl) {
+            const setVal = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+            setVal('kenarSolVal', a.sol_kenar ?? 4);
+            setVal('kenarSagVal', a.sag_kenar ?? 2.5);
+            setVal('kenarUstVal', a.ust_kenar ?? 2.5);
+            setVal('kenarAltVal', a.alt_kenar ?? 2.5);
+            setVal('kenarBolumVal', a.ust_bolum ?? 5);
         }
     } catch (e) { console.warn('Önizleme güncellenemedi', e); }
 }

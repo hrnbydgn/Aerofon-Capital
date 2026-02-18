@@ -616,6 +616,19 @@ body {
     font-size: 10pt;
 }
 
+.ayar-kenar-onizleme .kenar-onizleme-sayfa {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.ayar-kenar-onizleme .kenar-onizleme-sayfa span {
+    padding: 0.35rem 0.5rem;
+    background: var(--bg-input);
+    border-radius: 6px;
+}
+
 .ayar-sekmeler {
     display: flex;
     gap: 0.25rem;

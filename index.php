@@ -188,6 +188,16 @@
                         <input type="number" id="ayarCiltPayi" min="0" max="2" step="0.25" value="0">
                     </div>
                 </div>
+                <h4>Önizleme</h4>
+                <div class="ayar-onizleme ayar-kenar-onizleme" id="kenarOnizleme">
+                    <div class="kenar-onizleme-sayfa">
+                        <span class="kenar-sol">Sol: <span id="kenarSolVal">4</span> cm</span>
+                        <span class="kenar-sag">Sağ: <span id="kenarSagVal">2.5</span> cm</span>
+                        <span class="kenar-ust">Üst: <span id="kenarUstVal">2.5</span> cm</span>
+                        <span class="kenar-alt">Alt: <span id="kenarAltVal">2.5</span> cm</span>
+                        <span class="kenar-bolum">Bölüm üst: <span id="kenarBolumVal">5</span> cm</span>
+                    </div>
+                </div>
             </div>
 
             <div class="ayar-panel" id="panel-tablo">
