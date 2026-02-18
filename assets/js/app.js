@@ -285,9 +285,23 @@ function ayarlariFormaYaz(ayarlar) {
     document.getElementById('ayarGirinti').value = ayarlar.paragraf_girinti ?? 1;
     document.getElementById('ayarTabloFont').value = ayarlar.tablo_font ?? 12;
     document.getElementById('ayarTabloSatir').value = ayarlar.tablo_satir ?? 1;
+    document.getElementById('ayarTabloHizalama').value = ayarlar.tablo_hizalama ?? 'sol';
+    document.getElementById('ayarTabloBaslikKalin').value = ayarlar.tablo_baslik_kalin !== false ? '1' : '0';
     document.getElementById('ayarTabloYaziFont').value = ayarlar.tablo_yazi_font ?? 12;
     document.getElementById('ayarTabloYaziKonum').value = ayarlar.tablo_yazi_konum ?? 'ust_sol';
     document.getElementById('ayarTabloYaziKalin').value = ayarlar.tablo_yazi_kalin !== false ? '1' : '0';
+    document.getElementById('ayarTabloKenarlikKalin').value = ayarlar.tablo_kenarlik_kalin ?? 1;
+    document.getElementById('ayarTabloKenarlikStil').value = ayarlar.tablo_kenarlik_stil ?? 'tek';
+    document.getElementById('ayarTabloDisKenarlik').value = ayarlar.tablo_dis_kenarlik !== false ? '1' : '0';
+    document.getElementById('ayarTabloIcKenarlik').value = ayarlar.tablo_ic_kenarlik !== false ? '1' : '0';
+    document.getElementById('ayarTabloPaddingUst').value = ayarlar.tablo_padding_ust ?? 1.5;
+    document.getElementById('ayarTabloPaddingAlt').value = ayarlar.tablo_padding_alt ?? 1.5;
+    document.getElementById('ayarTabloPaddingSol').value = ayarlar.tablo_padding_sol ?? 2;
+    document.getElementById('ayarTabloPaddingSag').value = ayarlar.tablo_padding_sag ?? 2;
+    document.getElementById('ayarTabloUstBosluk').value = ayarlar.tablo_ust_bosluk ?? 0.5;
+    document.getElementById('ayarTabloAltBosluk').value = ayarlar.tablo_alt_bosluk ?? 0.5;
+    document.getElementById('ayarTabloGenislik').value = ayarlar.tablo_genislik ?? 100;
+    document.getElementById('ayarTabloOrtala').value = ayarlar.tablo_ortala !== false ? '1' : '0';
     document.getElementById('ayarSekilFont').value = ayarlar.sekil_font ?? 12;
     document.getElementById('ayarSekilKonum').value = ayarlar.sekil_konum ?? 'alt_orta';
     document.getElementById('ayarSekilKalin').value = ayarlar.sekil_kalin !== false ? '1' : '0';
@@ -308,9 +322,23 @@ function ayarlariFormdanOku() {
         paragraf_girinti: parseFloat(document.getElementById('ayarGirinti').value) || 1,
         tablo_font: parseInt(document.getElementById('ayarTabloFont').value) || 12,
         tablo_satir: parseFloat(document.getElementById('ayarTabloSatir').value) || 1,
+        tablo_hizalama: document.getElementById('ayarTabloHizalama').value || 'sol',
+        tablo_baslik_kalin: document.getElementById('ayarTabloBaslikKalin').value === '1',
         tablo_yazi_font: parseInt(document.getElementById('ayarTabloYaziFont').value) || 12,
         tablo_yazi_konum: document.getElementById('ayarTabloYaziKonum').value || 'ust_sol',
         tablo_yazi_kalin: document.getElementById('ayarTabloYaziKalin').value === '1',
+        tablo_kenarlik_kalin: parseFloat(document.getElementById('ayarTabloKenarlikKalin').value) || 1,
+        tablo_kenarlik_stil: document.getElementById('ayarTabloKenarlikStil').value || 'tek',
+        tablo_dis_kenarlik: document.getElementById('ayarTabloDisKenarlik').value === '1',
+        tablo_ic_kenarlik: document.getElementById('ayarTabloIcKenarlik').value === '1',
+        tablo_padding_ust: parseFloat(document.getElementById('ayarTabloPaddingUst').value) || 1.5,
+        tablo_padding_alt: parseFloat(document.getElementById('ayarTabloPaddingAlt').value) || 1.5,
+        tablo_padding_sol: parseFloat(document.getElementById('ayarTabloPaddingSol').value) || 2,
+        tablo_padding_sag: parseFloat(document.getElementById('ayarTabloPaddingSag').value) || 2,
+        tablo_ust_bosluk: parseFloat(document.getElementById('ayarTabloUstBosluk').value) || 0.5,
+        tablo_alt_bosluk: parseFloat(document.getElementById('ayarTabloAltBosluk').value) || 0.5,
+        tablo_genislik: document.getElementById('ayarTabloGenislik').value === 'otomatik' ? 'otomatik' : (parseInt(document.getElementById('ayarTabloGenislik').value) || 100),
+        tablo_ortala: document.getElementById('ayarTabloOrtala').value === '1',
         sekil_font: parseInt(document.getElementById('ayarSekilFont').value) || 12,
         sekil_konum: document.getElementById('ayarSekilKonum').value || 'alt_orta',
         sekil_kalin: document.getElementById('ayarSekilKalin').value === '1',
@@ -358,9 +386,23 @@ function ayarlarVarsayilan() {
         paragraf_girinti: 1,
         tablo_font: 12,
         tablo_satir: 1,
+        tablo_hizalama: 'sol',
+        tablo_baslik_kalin: true,
         tablo_yazi_font: 12,
         tablo_yazi_konum: 'ust_sol',
         tablo_yazi_kalin: true,
+        tablo_kenarlik_kalin: 1,
+        tablo_kenarlik_stil: 'tek',
+        tablo_dis_kenarlik: true,
+        tablo_ic_kenarlik: true,
+        tablo_padding_ust: 1.5,
+        tablo_padding_alt: 1.5,
+        tablo_padding_sol: 2,
+        tablo_padding_sag: 2,
+        tablo_ust_bosluk: 0.5,
+        tablo_alt_bosluk: 0.5,
+        tablo_genislik: 100,
+        tablo_ortala: true,
         sekil_font: 12,
         sekil_konum: 'alt_orta',
         sekil_kalin: true,

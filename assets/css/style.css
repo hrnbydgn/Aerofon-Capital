@@ -380,6 +380,11 @@ body {
     font-size: 0.9rem;
     color: var(--text-muted);
     margin-bottom: 0.75rem;
+    margin-top: 1rem;
+}
+
+.ayar-panel h4:first-child {
+    margin-top: 0;
 }
 
 .ayar-grid {

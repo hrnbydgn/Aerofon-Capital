@@ -150,20 +150,8 @@
             </div>
 
             <div class="ayar-panel" id="panel-tablo">
-                <h4>Tablo Biçimi</h4>
+                <h4>Tablo Yazısı (Başlık)</h4>
                 <div class="ayar-grid">
-                    <div class="form-grup">
-                        <label>Tablo Font (pt)</label>
-                        <input type="number" id="ayarTabloFont" min="8" max="14" value="12">
-                    </div>
-                    <div class="form-grup">
-                        <label>Tablo Satır Aralığı</label>
-                        <select id="ayarTabloSatir">
-                            <option value="1" selected>Tek</option>
-                            <option value="1.15">1.15</option>
-                            <option value="1.5">1.5</option>
-                        </select>
-                    </div>
                     <div class="form-grup">
                         <label>Tablo Yazısı Font (pt)</label>
                         <input type="number" id="ayarTabloYaziFont" min="8" max="14" value="12">
@@ -180,6 +168,117 @@
                     <div class="form-grup">
                         <label>Tablo Yazısı Kalın</label>
                         <select id="ayarTabloYaziKalin">
+                            <option value="1" selected>Evet</option>
+                            <option value="0">Hayır</option>
+                        </select>
+                    </div>
+                </div>
+                <h4>Tablo İçeriği</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>Tablo Font (pt)</label>
+                        <input type="number" id="ayarTabloFont" min="8" max="14" value="12">
+                    </div>
+                    <div class="form-grup">
+                        <label>Satır Aralığı</label>
+                        <select id="ayarTabloSatir">
+                            <option value="1" selected>Tek</option>
+                            <option value="1.15">1.15</option>
+                            <option value="1.5">1.5</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Metin Hizalama</label>
+                        <select id="ayarTabloHizalama">
+                            <option value="sol" selected>Sola yaslı</option>
+                            <option value="orta">Ortada</option>
+                            <option value="sag">Sağa yaslı</option>
+                            <option value="iki_yana">İki yana yaslı</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Başlık Satırı Kalın</label>
+                        <select id="ayarTabloBaslikKalin">
+                            <option value="1" selected>Evet</option>
+                            <option value="0">Hayır</option>
+                        </select>
+                    </div>
+                </div>
+                <h4>Kenarlıklar</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>Kenarlık Kalınlığı (pt)</label>
+                        <select id="ayarTabloKenarlikKalin">
+                            <option value="0.5">0.5</option>
+                            <option value="1" selected>1</option>
+                            <option value="1.5">1.5</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Kenarlık Stili</label>
+                        <select id="ayarTabloKenarlikStil">
+                            <option value="tek" selected>Tek çizgi</option>
+                            <option value="cift">Çift çizgi</option>
+                            <option value="noktali">Noktalı</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Dış Kenarlık</label>
+                        <select id="ayarTabloDisKenarlik">
+                            <option value="1" selected>Var</option>
+                            <option value="0">Yok</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>İç Kenarlık (Hücreler)</label>
+                        <select id="ayarTabloIcKenarlik">
+                            <option value="1" selected>Var</option>
+                            <option value="0">Yok</option>
+                        </select>
+                    </div>
+                </div>
+                <h4>Boşluklar (mm)</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>Hücre Üst Boşluk</label>
+                        <input type="number" id="ayarTabloPaddingUst" min="0" max="10" step="0.5" value="1.5">
+                    </div>
+                    <div class="form-grup">
+                        <label>Hücre Alt Boşluk</label>
+                        <input type="number" id="ayarTabloPaddingAlt" min="0" max="10" step="0.5" value="1.5">
+                    </div>
+                    <div class="form-grup">
+                        <label>Hücre Sol Boşluk</label>
+                        <input type="number" id="ayarTabloPaddingSol" min="0" max="10" step="0.5" value="2">
+                    </div>
+                    <div class="form-grup">
+                        <label>Hücre Sağ Boşluk</label>
+                        <input type="number" id="ayarTabloPaddingSag" min="0" max="10" step="0.5" value="2">
+                    </div>
+                    <div class="form-grup">
+                        <label>Tablo Üst Boşluk (cm)</label>
+                        <input type="number" id="ayarTabloUstBosluk" min="0" max="5" step="0.5" value="0.5">
+                    </div>
+                    <div class="form-grup">
+                        <label>Tablo Alt Boşluk (cm)</label>
+                        <input type="number" id="ayarTabloAltBosluk" min="0" max="5" step="0.5" value="0.5">
+                    </div>
+                </div>
+                <h4>Genel</h4>
+                <div class="ayar-grid">
+                    <div class="form-grup">
+                        <label>Tablo Genişliği</label>
+                        <select id="ayarTabloGenislik">
+                            <option value="100" selected>Sayfa genişliği (%100)</option>
+                            <option value="90">%90</option>
+                            <option value="80">%80</option>
+                            <option value="otomatik">İçeriğe göre</option>
+                        </select>
+                    </div>
+                    <div class="form-grup">
+                        <label>Tablo Ortala</label>
+                        <select id="ayarTabloOrtala">
                             <option value="1" selected>Evet</option>
                             <option value="0">Hayır</option>
                         </select>
