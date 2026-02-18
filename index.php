@@ -323,6 +323,34 @@
         </div>
     </div>
 
+    <!-- Tablo Düzenleme Modal -->
+    <div class="modal" id="tabloModal">
+        <div class="modal-icerik">
+            <h3>Tablo Düzenle</h3>
+            <div class="form-grup">
+                <label>Tablo Başlığı</label>
+                <input type="text" id="tabloModalCaption" placeholder="Tablo 1.1:">
+            </div>
+            <div class="tablo-modal-tbody-wrap">
+                <table class="tablo-modal-tablo">
+                    <tbody id="tabloModalTbody"></tbody>
+                </table>
+            </div>
+            <div class="tablo-modal-actions">
+                <button type="button" class="btn btn-outline btn-sm" id="tabloModalAddRow">+ Satır</button>
+                <button type="button" class="btn btn-outline btn-sm" id="tabloModalAddCol">+ Sütun</button>
+            </div>
+            <div class="form-grup">
+                <label>Kaynak</label>
+                <input type="text" id="tabloModalSource" placeholder="Kaynak: ...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="tabloModalIptal">İptal</button>
+                <button type="button" class="btn btn-primary" id="tabloModalKaydet">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
     <script src="assets/js/app.js"></script>
 </body>
 </html>

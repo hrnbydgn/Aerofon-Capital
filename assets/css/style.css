@@ -62,6 +62,62 @@ body {
     .main {
         grid-template-columns: 1fr;
     }
+    .sidebar {
+        position: static;
+    }
+    .app {
+        padding: 0.75rem;
+    }
+    .header {
+        padding: 1.25rem 0;
+    }
+    .header h1 {
+        font-size: 1.4rem;
+    }
+    .icerik {
+        padding: 1rem;
+    }
+    .bolum-karti {
+        padding: 0.75rem;
+    }
+    .bolum-karti.bolum-seviye-alt {
+        margin-left: 0.75rem;
+    }
+    .form-satir {
+        grid-template-columns: 1fr;
+    }
+    .editor-aksiyonlar {
+        flex-direction: column;
+    }
+    .editor-aksiyonlar .btn {
+        width: 100%;
+    }
+    .blok-ekle-grup {
+        flex-direction: column;
+    }
+    .blok-ekle-grup .btn {
+        width: 100%;
+    }
+    .blok-toolbar {
+        flex-wrap: wrap;
+    }
+    .modal-icerik {
+        width: 95%;
+        max-height: 85vh;
+    }
+}
+
+@media (max-width: 480px) {
+    .bolum-karti-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .bolum-karti-header input {
+        margin-right: 0;
+    }
+    .bolum-aksiyonlar {
+        justify-content: flex-end;
+    }
 }
 
 .sidebar {
@@ -109,6 +165,7 @@ body {
 .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.4rem;
     padding: 0.6rem 1rem;
     border: none;
@@ -117,6 +174,8 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: background 0.15s, opacity 0.15s;
+    min-height: 44px;
+    touch-action: manipulation;
 }
 
 .btn:disabled {
@@ -286,22 +345,176 @@ body {
     font-size: 0.95rem;
 }
 
-.bolum-karti textarea {
-    width: 100%;
-    min-height: 280px;
-    padding: 0.75rem;
+.blok-editor {
+    margin-top: 0.75rem;
+}
+
+.blok-listesi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.blok {
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 8px;
+    overflow: hidden;
+}
+
+.blok-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-input);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+}
+
+.blok-tip {
+    color: var(--text-muted);
+}
+
+.blok-actions {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.blok-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-width: 32px;
+    min-height: 32px;
+    touch-action: manipulation;
+}
+
+.blok-btn:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
+.blok-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.75rem;
+    background: var(--bg);
+    border: none;
     color: var(--text);
     font-size: 0.95rem;
     resize: vertical;
     font-family: inherit;
+    display: block;
 }
 
-.bolum-karti textarea:focus {
+.blok-textarea:focus {
     outline: none;
+}
+
+.blok-tablo-preview {
+    padding: 0.75rem;
+    overflow-x: auto;
+}
+
+.blok-tablo-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.blok-tablo-preview td {
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.6rem;
+}
+
+.tablo-caption {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.blok-resim-wrap {
+    display: block;
+    cursor: pointer;
+    padding: 1rem;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    text-align: center;
+    min-height: 120px;
+}
+
+.blok-resim-wrap:hover {
     border-color: var(--accent);
+    background: rgba(74, 158, 255, 0.05);
+}
+
+.blok-resim-wrap img {
+    max-width: 100%;
+    max-height: 200px;
+    display: block;
+    margin: 0 auto;
+}
+
+.blok-resim-placeholder {
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+.blok-resim-caption {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg);
+    border: none;
+    border-top: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.85rem;
+}
+
+.blok-ekle-grup {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.tablo-modal-tbody-wrap {
+    overflow-x: auto;
+    margin: 1rem 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.tablo-modal-tablo {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tablo-modal-tablo td {
+    padding: 0.25rem;
+}
+
+.tablo-modal-tablo input {
+    width: 100%;
+    min-width: 80px;
+    padding: 0.4rem;
+}
+
+.tablo-cell-actions {
+    width: 40px;
+    vertical-align: middle;
+}
+
+.tablo-modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .modal {

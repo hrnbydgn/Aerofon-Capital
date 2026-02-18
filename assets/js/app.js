@@ -20,6 +20,12 @@ function olaylariBagla() {
     document.getElementById('ayarlarModal').addEventListener('click', (e) => {
         if (e.target.id === 'ayarlarModal') ayarlarKapat();
     });
+    document.getElementById('tabloModal').addEventListener('click', (e) => {
+        if (e.target.id === 'tabloModal') document.getElementById('tabloModal').classList.remove('aktif');
+    });
+    document.getElementById('tabloModalIptal').addEventListener('click', () => {
+        document.getElementById('tabloModal').classList.remove('aktif');
+    });
     document.querySelectorAll('.ayar-sekme').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.ayar-sekme').forEach(b => b.classList.remove('aktif'));
@@ -75,6 +81,21 @@ function editoruDoldur(proje) {
     ayarlariFormaYaz(proje.ayarlar || {});
 }
 
+function parseIcerik(icerik) {
+    if (!icerik || (typeof icerik === 'string' && icerik.trim() === '')) return [];
+    if (typeof icerik === 'string' && icerik.trim().startsWith('[')) {
+        try {
+            const parsed = JSON.parse(icerik);
+            if (Array.isArray(parsed)) return parsed.map(b => ({ ...b, id: b.id || blokId() }));
+        } catch (_) {}
+    }
+    return [{ id: blokId(), type: 'text', content: typeof icerik === 'string' ? icerik : '' }];
+}
+
+function blokId() {
+    return 'b' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+}
+
 function bolumleriCiz(bolumler, parentId = 0) {
     const div = parentId === 0 ? document.getElementById('bolumListesi') : document.querySelector(`.bolum-karti[data-id="${parentId}"] .bolum-alt-listesi`);
     if (!div) return;
@@ -90,7 +111,14 @@ function bolumleriCiz(bolumler, parentId = 0) {
                     <button type="button" class="btn btn-danger btn-sm bolum-sil">Sil</button>
                 </div>
             </div>
-            <textarea class="bolum-icerik" placeholder="Bölüm içeriğini buraya yazın...">${escapeHtml(b.icerik || '')}</textarea>
+            <div class="blok-editor" data-bolum-id="${b.id}">
+                <div class="blok-listesi"></div>
+                <div class="blok-ekle-grup">
+                    <button type="button" class="btn btn-outline btn-sm blok-ekle" data-type="text">+ Metin</button>
+                    <button type="button" class="btn btn-outline btn-sm blok-ekle" data-type="table">+ Tablo</button>
+                    <button type="button" class="btn btn-outline btn-sm blok-ekle" data-type="image">+ Resim</button>
+                </div>
+            </div>
             ${altListe}
         </div>`;
     }).join('');
@@ -100,7 +128,181 @@ function bolumleriCiz(bolumler, parentId = 0) {
     div.querySelectorAll('.alt-bolum-ekle').forEach(btn => {
         btn.addEventListener('click', () => altBolumEkle(btn.closest('.bolum-karti').dataset.id));
     });
+    cocuklar.forEach(b => {
+        const editor = div.querySelector(`.bolum-karti[data-id="${b.id}"] .blok-editor`);
+        if (editor) blokEditorInit(editor, parseIcerik(b.icerik));
+    });
     cocuklar.forEach(b => bolumleriCiz(bolumler, b.id));
+}
+
+function blokEditorInit(container, bloklar) {
+    const liste = container.querySelector('.blok-listesi');
+    const render = () => {
+        liste.innerHTML = bloklar.map((blok, idx) => blokRender(blok, idx)).join('');
+        liste.querySelectorAll('.blok-sil').forEach(btn => {
+            btn.addEventListener('click', () => {
+                bloklar.splice(bloklar.indexOf(bloklar.find(b => b.id === btn.dataset.id)), 1);
+                render();
+            });
+        });
+        liste.querySelectorAll('.blok-yukari').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const i = bloklar.findIndex(b => b.id === btn.dataset.id);
+                if (i > 0) { [bloklar[i], bloklar[i - 1]] = [bloklar[i - 1], bloklar[i]]; render(); }
+            });
+        });
+        liste.querySelectorAll('.blok-asagi').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const i = bloklar.findIndex(b => b.id === btn.dataset.id);
+                if (i < bloklar.length - 1) { [bloklar[i], bloklar[i + 1]] = [bloklar[i + 1], bloklar[i]]; render(); }
+            });
+        });
+        liste.querySelectorAll('.blok-tablo-edit').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const blok = bloklar.find(b => b.id === btn.dataset.id);
+                if (blok && blok.type === 'table') tabloModalAc(blok, () => render());
+            });
+        });
+        liste.querySelectorAll('.blok-resim-input').forEach(inp => {
+            inp.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const blok = bloklar.find(b => b.id === inp.dataset.id);
+                if (!blok) return;
+                const fd = new FormData();
+                fd.append('file', file);
+                try {
+                    const r = await fetch('upload.php', { method: 'POST', body: fd });
+                    const d = await r.json();
+                    if (d.url) { blok.src = d.url; blok.caption = blok.caption || 'Şekil:'; render(); }
+                    else alert(d.hata || 'Yükleme hatası');
+                } catch (err) { alert('Yükleme hatası'); }
+                inp.value = '';
+            });
+        });
+        liste.querySelectorAll('.blok-textarea').forEach(ta => {
+            const blok = bloklar.find(b => b.id === ta.dataset.id);
+            if (blok && blok.content !== ta.value) blok.content = ta.value;
+        });
+        liste.querySelectorAll('.blok-resim-caption').forEach(inp => {
+            const blok = bloklar.find(b => b.id === inp.dataset.id);
+            if (blok) blok.caption = inp.value;
+        });
+    };
+    container.querySelectorAll('.blok-ekle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.type;
+            if (type === 'text') bloklar.push({ id: blokId(), type: 'text', content: '' });
+            else if (type === 'table') bloklar.push({ id: blokId(), type: 'table', caption: 'Tablo:', data: [['', ''], ['', '']], source: '' });
+            else if (type === 'image') bloklar.push({ id: blokId(), type: 'image', src: '', caption: 'Şekil:', alt: '' });
+            render();
+        });
+    });
+    container.bloklar = bloklar;
+    render();
+}
+
+function blokRender(blok, idx) {
+    if (blok.type === 'text') {
+        return `
+        <div class="blok blok-text" data-id="${blok.id}">
+            <div class="blok-toolbar">
+                <span class="blok-tip">Metin</span>
+                <div class="blok-actions">
+                    <button type="button" class="blok-btn blok-yukari" data-id="${blok.id}" title="Yukarı">↑</button>
+                    <button type="button" class="blok-btn blok-asagi" data-id="${blok.id}" title="Aşağı">↓</button>
+                    <button type="button" class="blok-btn blok-sil" data-id="${blok.id}" title="Sil">×</button>
+                </div>
+            </div>
+            <textarea class="blok-textarea" data-id="${blok.id}" placeholder="Metin yazın...">${escapeHtml(blok.content || '')}</textarea>
+        </div>`;
+    }
+    if (blok.type === 'table') {
+        const rows = (blok.data || [['', ''], ['', '']]).map(r => r.map(c => escapeHtml(c || '')).join('</td><td>')).join('</tr><tr><td>');
+        return `
+        <div class="blok blok-table" data-id="${blok.id}">
+            <div class="blok-toolbar">
+                <span class="blok-tip">Tablo</span>
+                <div class="blok-actions">
+                    <button type="button" class="blok-btn blok-tablo-edit" data-id="${blok.id}" title="Düzenle">✎</button>
+                    <button type="button" class="blok-btn blok-yukari" data-id="${blok.id}">↑</button>
+                    <button type="button" class="blok-btn blok-asagi" data-id="${blok.id}">↓</button>
+                    <button type="button" class="blok-btn blok-sil" data-id="${blok.id}">×</button>
+                </div>
+            </div>
+            <div class="blok-tablo-preview">
+                <span class="tablo-caption">${escapeHtml(blok.caption || 'Tablo:')}</span>
+                <table><tr><td>${rows || '<td></td><td></td>'}</tr></table>
+            </div>
+        </div>`;
+    }
+    if (blok.type === 'image') {
+        const imgHtml = blok.src ? `<img src="${escapeHtml(blok.src)}" alt="${escapeHtml(blok.alt || '')}">` : '<div class="blok-resim-placeholder">Resim yükle</div>';
+        return `
+        <div class="blok blok-image" data-id="${blok.id}">
+            <div class="blok-toolbar">
+                <span class="blok-tip">Resim</span>
+                <div class="blok-actions">
+                    <label class="blok-btn blok-resim-yukle" title="Yükle" for="resim-${blok.id}">📷</label>
+                    <input type="file" id="resim-${blok.id}" class="blok-resim-input" data-id="${blok.id}" accept="image/*" capture="environment" hidden>
+                    <button type="button" class="blok-btn blok-yukari" data-id="${blok.id}">↑</button>
+                    <button type="button" class="blok-btn blok-asagi" data-id="${blok.id}">↓</button>
+                    <button type="button" class="blok-btn blok-sil" data-id="${blok.id}">×</button>
+                </div>
+            </div>
+            <label class="blok-resim-wrap" for="resim-${blok.id}">
+                ${imgHtml}
+            </label>
+            <input type="text" class="blok-resim-caption" data-id="${blok.id}" placeholder="Şekil açıklaması" value="${escapeHtml(blok.caption || '')}">
+        </div>`;
+    }
+    return '';
+}
+
+function tabloModalAc(blok, onSave) {
+    document.getElementById('tabloModal').classList.add('aktif');
+    const tbody = document.getElementById('tabloModalTbody');
+    const data = blok.data || [['', ''], ['', '']];
+    document.getElementById('tabloModalCaption').value = blok.caption || 'Tablo:';
+    document.getElementById('tabloModalSource').value = blok.source || '';
+    tbody.innerHTML = data.map((row, ri) => `
+        <tr data-row="${ri}">
+            ${row.map((cell, ci) => `<td><input type="text" value="${escapeHtml(cell)}" data-row="${ri}" data-col="${ci}"></td>`).join('')}
+            <td class="tablo-cell-actions">
+                <button type="button" class="blok-btn tablo-row-del" data-row="${ri}">−</button>
+            </td>
+        </tr>
+    `).join('');
+    document.getElementById('tabloModalAddRow').onclick = () => {
+        const firstRow = tbody.querySelector('tr');
+        const cols = firstRow ? firstRow.querySelectorAll('td:not(.tablo-cell-actions)').length : 2;
+        const cells = Array(cols).fill('<input type="text">').map(h => `<td>${h}</td>`).join('');
+        const newRow = `<tr>${cells}<td class="tablo-cell-actions"><button type="button" class="blok-btn tablo-row-del">−</button></td></tr>`;
+        tbody.insertAdjacentHTML('beforeend', newRow);
+        tbody.querySelector('tr:last-child .tablo-row-del').addEventListener('click', function() {
+            if (tbody.rows.length > 1) this.closest('tr').remove();
+        });
+    };
+    tbody.querySelectorAll('.tablo-row-del').forEach(btn => {
+        btn.addEventListener('click', function() { if (tbody.rows.length > 1) this.closest('tr').remove(); });
+    });
+    document.getElementById('tabloModalAddCol').onclick = () => {
+        tbody.querySelectorAll('tr').forEach(tr => {
+            const lastDataTd = tr.querySelector('td:not(.tablo-cell-actions):last-of-type');
+            if (lastDataTd) {
+                const newTd = document.createElement('td');
+                newTd.innerHTML = '<input type="text">';
+                tr.insertBefore(newTd, tr.querySelector('.tablo-cell-actions'));
+            }
+        });
+    };
+    document.getElementById('tabloModalKaydet').onclick = () => {
+        blok.caption = document.getElementById('tabloModalCaption').value;
+        blok.source = document.getElementById('tabloModalSource').value;
+        blok.data = Array.from(tbody.querySelectorAll('tr')).map(tr => Array.from(tr.querySelectorAll('td:not(.tablo-cell-actions) input')).map(inp => inp.value));
+        document.getElementById('tabloModal').classList.remove('aktif');
+        onSave();
+    };
 }
 
 function bolumleriCizFlat(bolumler) {
@@ -230,7 +432,19 @@ function bolumleriTopla() {
         kartlar.forEach((k, i) => {
             const id = k.dataset.id ? parseInt(k.dataset.id) : null;
             const baslik = k.querySelector('.bolum-baslik')?.value || '';
-            const icerik = k.querySelector('.bolum-icerik')?.value || '';
+            const editor = k.querySelector('.blok-editor');
+            let icerik = '';
+            if (editor && editor.bloklar) {
+                editor.querySelectorAll('.blok-textarea').forEach(ta => {
+                    const blok = editor.bloklar.find(b => b.id === ta.dataset.id);
+                    if (blok) blok.content = ta.value;
+                });
+                editor.querySelectorAll('.blok-resim-caption').forEach(inp => {
+                    const blok = editor.bloklar.find(b => b.id === inp.dataset.id);
+                    if (blok) blok.caption = inp.value;
+                });
+                icerik = JSON.stringify(editor.bloklar);
+            }
             sonuc.push({ id, parent_id: parentId, baslik, icerik, sira: i + 1 });
             const altListe = k.querySelector('.bolum-alt-listesi');
             if (altListe) topla(altListe, id);

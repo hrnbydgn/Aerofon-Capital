@@ -154,6 +154,75 @@ foreach ($parents as &$arr) {
 $kokler = $parents[0] ?? [];
 unset($parents[0]);
 
+function icerikParse(string $s): array {
+    $s = trim($s);
+    if ($s === '') return [];
+    if (isset($s[0]) && $s[0] === '[') {
+        $d = json_decode($s, true);
+        return is_array($d) ? $d : [];
+    }
+    return [];
+}
+
+function bloklariRtfYaz(array $bloklar, array $ayarlar, string &$rtf, int $li, int $sl, int $saParagraf, int $fs): void {
+    $tabloFs = ((int)($ayarlar['tablo_font'] ?? 12)) * 2;
+    $tabloSl = (int)((float)($ayarlar['tablo_satir'] ?? 1) * 240);
+    $tabloYaziFs = ((int)($ayarlar['tablo_yazi_font'] ?? 12)) * 2;
+    $sekilFs = ((int)($ayarlar['sekil_font'] ?? 12)) * 2;
+
+    foreach ($bloklar as $blok) {
+        $tip = $blok['type'] ?? 'text';
+        if ($tip === 'text') {
+            $paragraflar = preg_split('/\n\s*\n/', trim($blok['content'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($paragraflar as $p) {
+                $p = trim($p);
+                if ($p === '') continue;
+                $rtf .= "{\\pard\\li0\\fi" . $li . "\\qj\\sa" . $saParagraf . "\\sl" . $sl . "\\fs" . $fs . " " . rtfEscape($p) . "\\par}\n";
+            }
+        } elseif ($tip === 'table') {
+            $caption = $blok['caption'] ?? 'Tablo:';
+            $kalın = ($ayarlar['tablo_yazi_kalin'] ?? true) ? '\\b ' : '';
+            $rtf .= "{\\pard\\li" . $li . "\\sa" . $saParagraf . "\\sl240\\fs" . $tabloYaziFs . " " . $kalın . rtfEscape($caption) . "\\par}\n";
+            $data = $blok['data'] ?? [];
+            $colW = 2000;
+            foreach ($data as $row) {
+                $cells = array_map(function ($c) {
+                    return rtfEscape((string)$c);
+                }, $row);
+                $pos = 0;
+                $cellx = '';
+                foreach ($cells as $_) {
+                    $pos += $colW;
+                    $cellx .= "\\cellx" . $pos . " ";
+                }
+                $rtf .= "{\\trowd\\trgaph0" . $cellx . "\\intbl ";
+                foreach ($cells as $c) {
+                    $rtf .= $c . " \\cell ";
+                }
+                $rtf .= "\\row}\n";
+            }
+            if (!empty($blok['source'])) {
+                $kaynakFs = ((int)($ayarlar['kaynak_font'] ?? 10)) * 2;
+                $rtf .= "{\\pard\\li" . $li . "\\sa" . $saParagraf . "\\sl240\\fs" . $kaynakFs . " Kaynak: " . rtfEscape($blok['source']) . "\\par}\n";
+            }
+        } elseif ($tip === 'image') {
+            $caption = $blok['caption'] ?? 'Şekil:';
+            $rtf .= "{\\pard\\qc\\sa" . $saParagraf . "\\sl240\\fs" . $sekilFs . "\\b " . rtfEscape($caption) . "\\par}\n";
+            $imgPath = $blok['src'] ?? '';
+            if ($imgPath && file_exists(__DIR__ . '/' . $imgPath)) {
+                $bin = file_get_contents(__DIR__ . '/' . $imgPath);
+                $hex = bin2hex($bin);
+                $ext = strtolower(pathinfo($imgPath, PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg', 'jpeg'])) {
+                    $rtf .= "{\\pict\\jpegblip\\picwgoal4000\\pichgoal3000 " . $hex . "}\n";
+                } elseif ($ext === 'png') {
+                    $rtf .= "{\\pict\\pngblip\\picwgoal4000\\pichgoal3000 " . $hex . "}\n";
+                }
+            }
+        }
+    }
+}
+
 function bolumYaz(array $bolumler, array $parents, array $ayarlar, string &$rtf, array $numara = []): void {
     $fs = 24;
     $li = cmToTwips(1.0);  // 1 cm girinti (kılavuz)
@@ -178,11 +247,17 @@ function bolumYaz(array $bolumler, array $parents, array $ayarlar, string &$rtf,
 
         $rtf .= "{\\pard\\li" . $li . "\\fi0\\qj\\sb" . $sb . "\\sa" . $saParagraf . "\\sl" . $slTek . "\\fs" . $fs . "\\b " . rtfEscape($baslikMetin) . "\\par}\n";
 
-        $paragraflar = preg_split('/\n\s*\n/', trim($b['icerik'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
-        foreach ($paragraflar as $p) {
-            $p = trim($p);
-            if ($p === '') continue;
-            $rtf .= "{\\pard\\li0\\fi" . $li . "\\qj\\sa" . $saParagraf . "\\sl" . $sl . "\\fs" . $fs . " " . rtfEscape($p) . "\\par}\n";
+        $icerik = $b['icerik'] ?? '';
+        $bloklar = icerikParse($icerik);
+        if (empty($bloklar)) {
+            $paragraflar = preg_split('/\n\s*\n/', trim($icerik), -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($paragraflar as $p) {
+                $p = trim($p);
+                if ($p === '') continue;
+                $rtf .= "{\\pard\\li0\\fi" . $li . "\\qj\\sa" . $saParagraf . "\\sl" . $sl . "\\fs" . $fs . " " . rtfEscape($p) . "\\par}\n";
+            }
+        } else {
+            bloklariRtfYaz($bloklar, $ayarlar, $rtf, $li, $sl, $saParagraf, $fs);
         }
 
         $cocuklar = $parents[(int)$b['id']] ?? [];
