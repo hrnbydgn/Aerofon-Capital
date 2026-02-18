@@ -1,13 +1,9 @@
 <?php
 /**
- * Tez Word çıktısı - YÖK/Ulusal yazım kurallarına uygun
+ * Tez RTF çıktısı - Bağımlılık yok, AWebServer uyumlu
+ * YÖK/Ulusal yazım kurallarına uygun
  */
 require_once __DIR__ . '/database.php';
-if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
-    header('Content-Type: text/plain; charset=utf-8');
-    die("PHPWord kurulu değil. Çalıştırın: composer install");
-}
-require_once __DIR__ . '/vendor/autoload.php';
 
 $id = (int)($_GET['id'] ?? 0);
 if (!$id) {
@@ -29,79 +25,114 @@ $varsayilan = [
     'baslik_buyuk_harf' => true,
 ];
 $ayarlar = array_merge($varsayilan, $proje['ayarlar'] ?? []);
-if (!isset($proje['ayarlar']['alt_kenar']) && isset($proje['ayarlar']['ust_kenar'])) {
-    $ayarlar['alt_kenar'] = $ayarlar['ust_kenar'];
+
+function rtfEscape(string $s): string {
+    $out = '';
+    $len = mb_strlen($s, 'UTF-8');
+    for ($i = 0; $i < $len; $i++) {
+        $c = mb_substr($s, $i, 1, 'UTF-8');
+        $cp = function_exists('mb_ord') ? mb_ord($c, 'UTF-8') : hexdec(bin2hex(mb_convert_encoding($c, 'UCS-4BE', 'UTF-8')));
+        if ($c === '\\' || $c === '{' || $c === '}') {
+            $out .= '\\' . $c;
+        } elseif ($cp < 128) {
+            $out .= $c;
+        } else {
+            $out .= '\\u' . $cp . '?';
+        }
+    }
+    return $out;
 }
 
-$phpWord = new \PhpOffice\PhpWord\PhpWord();
-$section = $phpWord->addSection([
-    'marginLeft' => $ayarlar['sol_kenar'] * 28.35,
-    'marginRight' => $ayarlar['sag_kenar'] * 28.35,
-    'marginTop' => $ayarlar['ust_kenar'] * 28.35,
-    'marginBottom' => (float)($ayarlar['alt_kenar'] ?? 2.5) * 28.35,
-]);
+function cmToTwips(float $cm): int {
+    return (int)round($cm * 567);
+}
 
-$fontAdi = $ayarlar['font'];
-$fontBoyut = (int)$ayarlar['font_boyutu'];
-$baslikFont = (int)($ayarlar['baslik_font_boyutu'] ?? 14);
-$satirAraligi = (float)($ayarlar['satir_araligi'] ?? 1.5);
-$girinti = (float)($ayarlar['paragraf_girinti'] ?? 1.25) * 28.35;
+$fs = (int)($ayarlar['font_boyutu'] ?? 12) * 2; // yarım punto
+$fsBaslik = (int)($ayarlar['baslik_font_boyutu'] ?? 14) * 2;
+$li = cmToTwips((float)($ayarlar['paragraf_girinti'] ?? 1.25));
+$sl = (int)(($ayarlar['satir_araligi'] ?? 1.5) * 240); // satır aralığı
+$buyukHarf = ($ayarlar['baslik_buyuk_harf'] ?? true);
 
-$paragrafStili = [
-    'align' => 'both',
-    'spaceAfter' => 0,
-    'lineHeight' => $satirAraligi,
-    'indentation' => ['firstLine' => $girinti],
-];
-$fontStili = ['name' => $fontAdi, 'size' => $fontBoyut];
+$rtf = "{\\rtf1\\ansi\\ansicpg1254\\deff0\n";
+$rtf .= "{\\fonttbl{\\f0 " . $ayarlar['font'] . ";}}\n";
+$rtf .= "\\paperw11906\\paperh16838\n";
+$rtf .= "\\margl" . cmToTwips($ayarlar['sol_kenar']) . "\\margr" . cmToTwips($ayarlar['sag_kenar']);
+$rtf .= "\\margt" . cmToTwips($ayarlar['ust_kenar']) . "\\margb" . cmToTwips($ayarlar['alt_kenar'] ?? 2.5) . "\n";
+$rtf .= "\\f0\n\n";
 
-// Kapak / Başlık (YÖK formatı)
-$baslikFontStili = ['name' => $fontAdi, 'size' => $baslikFont, 'bold' => true];
-$kapakBaslik = $ayarlar['baslik_buyuk_harf'] ? mb_strtoupper($proje['baslik'], 'UTF-8') : $proje['baslik'];
-$section->addText($kapakBaslik, $baslikFontStili, ['align' => 'center', 'spaceAfter' => 240]);
-$section->addText('', $fontStili, ['spaceAfter' => 120]);
+// Kapak
+$kapakBaslik = $buyukHarf ? mb_strtoupper($proje['baslik'], 'UTF-8') : $proje['baslik'];
+$rtf .= "{\\pard\\qc\\fs" . $fsBaslik . "\\b " . rtfEscape($kapakBaslik) . "\\par}\n";
+$rtf .= "{\\pard\\qc\\sa240\\par}\n";
 
 if (!empty($proje['yazar'])) {
-    $section->addText('Hazırlayan: ' . $proje['yazar'], $fontStili, ['align' => 'center', 'spaceAfter' => 60]);
+    $rtf .= "{\\pard\\qc\\fs" . $fs . " " . rtfEscape('Hazırlayan: ' . $proje['yazar']) . "\\par}\n";
 }
 if (!empty($proje['danisman'])) {
-    $section->addText('Danışman: ' . $proje['danisman'], $fontStili, ['align' => 'center', 'spaceAfter' => 60]);
+    $rtf .= "{\\pard\\qc\\fs" . $fs . " " . rtfEscape('Danışman: ' . $proje['danisman']) . "\\par}\n";
 }
-if (!empty($proje['universite']) || !empty($proje['bolum'])) {
-    $kurum = trim(($proje['universite'] ?? '') . ' - ' . ($proje['enstitu'] ?? '') . ' - ' . ($proje['bolum'] ?? ''));
-    $kurum = trim($kurum, ' -');
-    if ($kurum) {
-        $section->addText($kurum, $fontStili, ['align' => 'center', 'spaceAfter' => 60]);
-    }
+$kurum = trim(($proje['universite'] ?? '') . ' - ' . ($proje['enstitu'] ?? '') . ' - ' . ($proje['bolum'] ?? ''), ' -');
+if ($kurum) {
+    $rtf .= "{\\pard\\qc\\fs" . $fs . " " . rtfEscape($kurum) . "\\par}\n";
 }
 if (!empty($proje['yil'])) {
-    $section->addText($proje['yil'], $fontStili, ['align' => 'center', 'spaceAfter' => 240]);
+    $rtf .= "{\\pard\\qc\\fs" . $fs . " " . rtfEscape((string)$proje['yil']) . "\\par}\n";
 }
 
-$section->addPageBreak();
+$rtf .= "{\\pard\\sa480\\par}\n";
+$rtf .= "\\page\n\n";
 
-// Bölümler
-$bolumBaslikStili = ['name' => $fontAdi, 'size' => $baslikFont, 'bold' => true];
-foreach ($proje['bolumler'] ?? [] as $b) {
-    $baslikMetin = $ayarlar['baslik_buyuk_harf'] ? mb_strtoupper($b['baslik'], 'UTF-8') : $b['baslik'];
-    $section->addText($baslikMetin, $bolumBaslikStili, ['spaceBefore' => 240, 'spaceAfter' => 120]);
+// Bölümler (hiyerarşik)
+function bolumYaz(array $bolumler, array $parents, array $ayarlar, string &$rtf, int $seviye = 0): void {
+    $fs = (int)($ayarlar['font_boyutu'] ?? 12) * 2;
+    $fsBaslik = max(10, (int)($ayarlar['baslik_font_boyutu'] ?? 14) - $seviye * 2) * 2;
+    $li = cmToTwips((float)($ayarlar['paragraf_girinti'] ?? 1.25));
+    $sl = (int)(($ayarlar['satir_araligi'] ?? 1.5) * 240);
+    $buyukHarf = $ayarlar['baslik_buyuk_harf'] ?? true;
+    $girinti = $seviye * cmToTwips(0.5);
 
-    $paragraflar = preg_split('/\n\s*\n/', trim($b['icerik'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
-    foreach ($paragraflar as $p) {
-        $p = trim($p);
-        if ($p === '') continue;
-        $section->addText($p, $fontStili, $paragrafStili);
+    foreach ($bolumler as $b) {
+        $baslikMetin = $buyukHarf ? mb_strtoupper($b['baslik'], 'UTF-8') : $b['baslik'];
+        $rtf .= "{\\pard\\li" . $girinti . "\\sb240\\sa120\\fs" . $fsBaslik . "\\b " . rtfEscape($baslikMetin) . "\\par}\n";
+
+        $paragraflar = preg_split('/\n\s*\n/', trim($b['icerik'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+        foreach ($paragraflar as $p) {
+            $p = trim($p);
+            if ($p === '') continue;
+            $rtf .= "{\\pard\\li" . ($girinti + $li) . "\\fi-" . $li . "\\sl" . $sl . " " . rtfEscape($p) . "\\par}\n";
+        }
+
+        $cocuklar = $parents[(int)$b['id']] ?? [];
+        if (!empty($cocuklar)) {
+            bolumYaz($cocuklar, $parents, $ayarlar, $rtf, $seviye + 1);
+        }
+        $rtf .= "{\\pard\\sa120\\par}\n";
     }
-    $section->addText('', $fontStili, ['spaceAfter' => 120]);
 }
 
-$dosyaAdi = preg_replace('/[^a-zA-Z0-9\-_ğüşıöçĞÜŞİÖÇ\s]/', '', $proje['baslik']);
+$tum = $proje['bolumler'] ?? [];
+$parents = [];
+foreach ($tum as $b) {
+    $pid = (int)($b['parent_id'] ?? 0);
+    if (!isset($parents[$pid])) $parents[$pid] = [];
+    $parents[$pid][] = $b;
+}
+foreach ($parents as &$arr) {
+    usort($arr, function ($a, $b) {
+        return ($a['sira'] ?? 0) - ($b['sira'] ?? 0);
+    });
+}
+$kokler = $parents[0] ?? [];
+unset($parents[0]);
+bolumYaz($kokler, $parents, $ayarlar, $rtf);
+
+$rtf .= "}\n";
+
+$dosyaAdi = preg_replace('/[^\p{L}\p{N}\s\-_]/u', '', $proje['baslik']);
 $dosyaAdi = preg_replace('/\s+/', '_', trim($dosyaAdi)) ?: 'tez';
 
-header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-header('Content-Disposition: attachment; filename="' . $dosyaAdi . '.docx"');
+header('Content-Type: application/rtf');
+header('Content-Disposition: attachment; filename="' . $dosyaAdi . '.rtf"');
 header('Cache-Control: max-age=0');
-
-$objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
-$objWriter->save('php://output');
+echo $rtf;
 exit;

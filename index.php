@@ -62,7 +62,7 @@
                         </div>
                         <div class="editor-aksiyonlar">
                             <button type="button" class="btn btn-secondary" id="ayarlarBtn">⚙️ Yazım Ayarları</button>
-                            <button type="button" class="btn btn-success" id="wordIndir">📥 Word İndir</button>
+                            <button type="button" class="btn btn-success" id="wordIndir">📥 RTF İndir</button>
                             <button type="button" class="btn btn-primary" id="kaydetBtn">💾 Kaydet</button>
                         </div>
                     </div>

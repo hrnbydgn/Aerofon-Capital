@@ -93,13 +93,15 @@ function bolumEkle(array $d): array {
     $db = getDB();
     $proje_id = (int)($d['proje_id'] ?? 0);
     if (!$proje_id) throw new Exception('Proje ID gerekli');
+    $parent_id = (int)($d['parent_id'] ?? 0);
     $sira = (int)($d['sira'] ?? 0);
     if ($sira <= 0) {
-        $r = $db->query("SELECT COALESCE(MAX(sira),0)+1 FROM tez_bolumleri WHERE proje_id=$proje_id")->fetchColumn();
-        $sira = (int)$r;
+        $stmt = $db->prepare("SELECT COALESCE(MAX(sira),0)+1 FROM tez_bolumleri WHERE proje_id=? AND parent_id=?");
+        $stmt->execute([$proje_id, $parent_id]);
+        $sira = (int)$stmt->fetchColumn();
     }
-    $stmt = $db->prepare("INSERT INTO tez_bolumleri (proje_id, sira, baslik, icerik) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$proje_id, $sira, $d['baslik'] ?? 'Yeni Bölüm', $d['icerik'] ?? '']);
+    $stmt = $db->prepare("INSERT INTO tez_bolumleri (proje_id, parent_id, sira, baslik, icerik) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([$proje_id, $parent_id, $sira, $d['baslik'] ?? 'Yeni Bölüm', $d['icerik'] ?? '']);
     return ['id' => (int)$db->lastInsertId(), 'sira' => $sira];
 }
 
@@ -107,20 +109,29 @@ function bolumGuncelle(array $d): array {
     $db = getDB();
     $id = (int)($d['id'] ?? 0);
     if (!$id) throw new Exception('Bölüm ID gerekli');
-    $stmt = $db->prepare("UPDATE tez_bolumleri SET baslik=?, icerik=?, sira=? WHERE id=?");
+    $stmt = $db->prepare("UPDATE tez_bolumleri SET baslik=?, icerik=?, sira=?, parent_id=? WHERE id=?");
     $stmt->execute([
         $d['baslik'] ?? '',
         $d['icerik'] ?? '',
         (int)($d['sira'] ?? 0),
+        (int)($d['parent_id'] ?? 0),
         $id
     ]);
     return ['ok' => true];
 }
 
+function bolumSilRecursive(PDO $db, int $id): void {
+    $stmt = $db->prepare("SELECT id FROM tez_bolumleri WHERE parent_id = ?");
+    $stmt->execute([$id]);
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $cid) {
+        bolumSilRecursive($db, (int)$cid);
+    }
+    $db->prepare("DELETE FROM tez_bolumleri WHERE id = ?")->execute([$id]);
+}
+
 function bolumSil(array $d): array {
     $db = getDB();
-    $stmt = $db->prepare("DELETE FROM tez_bolumleri WHERE id = ?");
-    $stmt->execute([(int)($d['id'] ?? 0)]);
+    bolumSilRecursive($db, (int)($d['id'] ?? 0));
     return ['ok' => true];
 }
 

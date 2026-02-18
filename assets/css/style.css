@@ -254,6 +254,20 @@ body {
     margin-bottom: 1rem;
 }
 
+.bolum-karti.bolum-seviye-alt {
+    margin-left: 1.5rem;
+    border-left: 3px solid var(--accent);
+}
+
+.bolum-alt-listesi {
+    margin-top: 1rem;
+}
+
+.bolum-aksiyonlar {
+    display: flex;
+    gap: 0.4rem;
+}
+
 .bolum-karti-header {
     display: flex;
     justify-content: space-between;

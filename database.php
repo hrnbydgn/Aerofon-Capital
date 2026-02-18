@@ -34,6 +34,7 @@ function initSchema(PDO $pdo): void {
         CREATE TABLE IF NOT EXISTS tez_bolumleri (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             proje_id INTEGER NOT NULL,
+            parent_id INTEGER DEFAULT 0,
             sira INTEGER NOT NULL,
             baslik TEXT NOT NULL,
             icerik TEXT,
@@ -41,6 +42,12 @@ function initSchema(PDO $pdo): void {
         )
     ");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_bolum_proje ON tez_bolumleri(proje_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_bolum_parent ON tez_bolumleri(parent_id)");
+    try {
+        $pdo->query("SELECT parent_id FROM tez_bolumleri LIMIT 1");
+    } catch (Throwable $e) {
+        $pdo->exec("ALTER TABLE tez_bolumleri ADD COLUMN parent_id INTEGER DEFAULT 0");
+    }
 }
 
 function getProjeById(int $id): array {
@@ -50,7 +57,7 @@ function getProjeById(int $id): array {
     $proje = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$proje) throw new Exception('Proje bulunamadı');
     $proje['ayarlar'] = json_decode($proje['ayarlar'] ?? '{}', true) ?? [];
-    $stmt = $pdo->prepare("SELECT id, sira, baslik, icerik FROM tez_bolumleri WHERE proje_id = ? ORDER BY sira");
+    $stmt = $pdo->prepare("SELECT id, parent_id, sira, baslik, icerik FROM tez_bolumleri WHERE proje_id = ? ORDER BY parent_id, sira");
     $stmt->execute([$id]);
     $proje['bolumler'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $proje;

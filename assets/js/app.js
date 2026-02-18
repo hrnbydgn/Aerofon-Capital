@@ -63,24 +63,41 @@ function editoruDoldur(proje) {
     document.getElementById('tezEnstitu').value = proje.enstitu || '';
     document.getElementById('tezBolum').value = proje.bolum || '';
     document.getElementById('tezYil').value = proje.yil || new Date().getFullYear();
-    bolumleriCiz(proje.bolumler || []);
+    bolumleriCizFlat(proje.bolumler || []);
     ayarlariFormaYaz(proje.ayarlar || {});
 }
 
-function bolumleriCiz(bolumler) {
-    const div = document.getElementById('bolumListesi');
-    div.innerHTML = bolumler.map((b, i) => `
-        <div class="bolum-karti" data-id="${b.id}">
+function bolumleriCiz(bolumler, parentId = 0) {
+    const div = parentId === 0 ? document.getElementById('bolumListesi') : document.querySelector(`.bolum-karti[data-id="${parentId}"] .bolum-alt-listesi`);
+    if (!div) return;
+    const cocuklar = bolumler.filter(b => (b.parent_id || 0) == parentId).sort((a, b) => (a.sira || 0) - (b.sira || 0));
+    div.innerHTML = cocuklar.map((b, i) => {
+        const altListe = `<div class="bolum-alt-listesi"></div>`;
+        return `
+        <div class="bolum-karti bolum-seviye-${parentId ? 'alt' : 'ust'}" data-id="${b.id}" data-parent-id="${parentId}">
             <div class="bolum-karti-header">
                 <input type="text" class="bolum-baslik" placeholder="Bölüm başlığı" value="${escapeHtml(b.baslik || '')}">
-                <button type="button" class="btn btn-danger btn-sm bolum-sil">Sil</button>
+                <div class="bolum-aksiyonlar">
+                    <button type="button" class="btn btn-outline btn-sm alt-bolum-ekle" title="Alt bölüm ekle">+ Alt</button>
+                    <button type="button" class="btn btn-danger btn-sm bolum-sil">Sil</button>
+                </div>
             </div>
             <textarea class="bolum-icerik" placeholder="Bölüm içeriğini buraya yazın...">${escapeHtml(b.icerik || '')}</textarea>
-        </div>
-    `).join('');
+            ${altListe}
+        </div>`;
+    }).join('');
     div.querySelectorAll('.bolum-sil').forEach(btn => {
         btn.addEventListener('click', () => bolumSil(btn.closest('.bolum-karti').dataset.id));
     });
+    div.querySelectorAll('.alt-bolum-ekle').forEach(btn => {
+        btn.addEventListener('click', () => altBolumEkle(btn.closest('.bolum-karti').dataset.id));
+    });
+    cocuklar.forEach(b => bolumleriCiz(bolumler, b.id));
+}
+
+function bolumleriCizFlat(bolumler) {
+    document.getElementById('bolumListesi').innerHTML = '';
+    bolumleriCiz(bolumler, 0);
 }
 
 async function yeniProje() {
@@ -105,13 +122,7 @@ async function yeniProje() {
 
 async function projeKaydet() {
     if (!seciliProjeId) return;
-    const bolumler = [];
-    document.querySelectorAll('.bolum-karti').forEach((k, i) => {
-        const id = k.dataset.id;
-        const baslik = k.querySelector('.bolum-baslik').value;
-        const icerik = k.querySelector('.bolum-icerik').value;
-        bolumler.push({ id: id ? parseInt(id) : undefined, sira: i + 1, baslik, icerik });
-    });
+    const bolumler = bolumleriTopla();
     const ayarlar = ayarlariFormdanOku();
     try {
         const rProje = await fetch(API, {
@@ -140,6 +151,7 @@ async function projeKaydet() {
                     body: JSON.stringify({
                         action: 'bolum_guncelle',
                         id: b.id,
+                        parent_id: b.parent_id || 0,
                         baslik: b.baslik,
                         icerik: b.icerik,
                         sira: b.sira
@@ -152,6 +164,7 @@ async function projeKaydet() {
                     body: JSON.stringify({
                         action: 'bolum_ekle',
                         proje_id: seciliProjeId,
+                        parent_id: b.parent_id || 0,
                         baslik: b.baslik,
                         icerik: b.icerik,
                         sira: b.sira
@@ -159,7 +172,7 @@ async function projeKaydet() {
                 });
                 const data = await r.json();
                 if (data.id) {
-                    const karti = document.querySelector(`.bolum-karti:not([data-id])`);
+                    const karti = document.querySelector(`.bolum-karti[data-id=""]`);
                     if (karti) karti.dataset.id = data.id;
                 }
             }
@@ -171,7 +184,7 @@ async function projeKaydet() {
     }
 }
 
-async function bolumEkle() {
+async function bolumEkle(parentId = 0) {
     if (!seciliProjeId) {
         alert('Önce bir proje seçin veya oluşturun.');
         return;
@@ -183,25 +196,40 @@ async function bolumEkle() {
             body: JSON.stringify({
                 action: 'bolum_ekle',
                 proje_id: seciliProjeId,
+                parent_id: parentId,
                 baslik: 'Yeni Bölüm',
                 icerik: ''
             })
         });
         const data = await r.json();
         if (data.hata) throw new Error(data.hata);
-        const bolumler = [];
-        document.querySelectorAll('.bolum-karti').forEach((k, i) => {
-            bolumler.push({
-                id: k.dataset.id ? parseInt(k.dataset.id) : null,
-                baslik: k.querySelector('.bolum-baslik').value,
-                icerik: k.querySelector('.bolum-icerik').value
-            });
-        });
-        bolumler.push({ id: data.id, baslik: 'Yeni Bölüm', icerik: '' });
-        bolumleriCiz(bolumler);
+        const bolumler = bolumleriTopla();
+        bolumler.push({ id: data.id, parent_id: parentId, baslik: 'Yeni Bölüm', icerik: '', sira: 999 });
+        bolumleriCizFlat(bolumler);
     } catch (e) {
         alert('Hata: ' + e.message);
     }
+}
+
+async function altBolumEkle(parentId) {
+    await bolumEkle(parseInt(parentId));
+}
+
+function bolumleriTopla() {
+    const sonuc = [];
+    function topla(container, parentId) {
+        const kartlar = container.querySelectorAll(':scope > .bolum-karti');
+        kartlar.forEach((k, i) => {
+            const id = k.dataset.id ? parseInt(k.dataset.id) : null;
+            const baslik = k.querySelector('.bolum-baslik')?.value || '';
+            const icerik = k.querySelector('.bolum-icerik')?.value || '';
+            sonuc.push({ id, parent_id: parentId, baslik, icerik, sira: i + 1 });
+            const altListe = k.querySelector('.bolum-alt-listesi');
+            if (altListe) topla(altListe, id);
+        });
+    }
+    topla(document.getElementById('bolumListesi'), 0);
+    return sonuc;
 }
 
 async function bolumSil(id) {
